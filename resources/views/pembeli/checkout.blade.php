@@ -1,59 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
 
     <style>
-        body { font-family: Arial; padding: 15px; }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            border-radius: 8px;
-            border: 1px solid #bbb;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: #F9F9F9;
         }
 
-        .btn {
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .total-row {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .payment-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .payment-option {
+            background: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .payment-option input {
+            transform: scale(1.3);
+        }
+
+        .payment-option.active {
+            border-color: #FF7A00;
+            background: #FFF4E9;
+        }
+
+        .checkout-btn {
             width: 100%;
+            text-align: center;
             background: #FF7A00;
             color: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin-top: 15px;
-            border: none;
-            font-size: 17px;
+            display: block;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
         }
     </style>
+
 </head>
 
 <body>
 
-<h2>Checkout</h2>
+    <div class="title">Checkout</div>
 
-<form action="{{ route('pesanan.simpan') }}" method="POST">
-@csrf
+    <!-- Ringkasan Pesanan -->
+    <div class="summary-box">
+        <div class="item-row">
+            <span>Total Item</span>
+            <span>{{ $total_items }} item</span>
+        </div>
 
-<label>Nama Pembeli</label>
-<input type="text" name="nama_pembeli" required>
+        <div class="item-row">
+            <span>Subtotal</span>
+            <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+        </div>
 
-<label>Alamat / Titik Jemput</label>
-<textarea name="alamat" required></textarea>
+        <div class="total-row">
+            <span>Total Bayar</span>
+            <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+        </div>
+    </div>
 
-<label>Metode Pembayaran</label>
-<select name="metode_pembayaran" required>
-    <option value="tunai">Tunai</option>
-    <option value="qris">QRIS</option>
-</select>
 
-<label>Ongkir (opsional)</label>
-<input type="number" name="ongkir" min="0" value="0">
+    <!-- Opsi Pembayaran -->
+    <div class="payment-title">Metode Pembayaran</div>
 
-<button class="btn">Buat Pesanan</button>
+    <form action="{{ route('pesanan.storeCheckout') }}" method="POST">
+        @csrf
 
-</form>
+        <label class="payment-option">
+            <input type="radio" name="pembayaran" value="tunai" required>
+            Tunai (Cash)
+        </label>
+
+        <label class="payment-option">
+            <input type="radio" name="pembayaran" value="qris" required>
+            QRIS
+        </label>
+
+        <button type="submit" class="checkout-btn">Buat Pesanan</button>
+    </form>
+
+
+    <script>
+        // highlight kotak saat dipilih
+        const options = document.querySelectorAll(".payment-option");
+
+        options.forEach(opt => {
+            opt.addEventListener("click", () => {
+                options.forEach(o => o.classList.remove("active"));
+                opt.classList.add("active");
+            });
+        });
+    </script>
 
 </body>
+
 </html>

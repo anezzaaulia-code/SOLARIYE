@@ -6,66 +6,99 @@
     <title>Keranjang</title>
 
     <style>
-        body { font-family: Arial; padding: 15px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .container { padding: 15px; }
+        .title { font-size: 22px; font-weight: bold; margin-bottom: 15px; }
 
-        .item {
-            background: white;
+        .cart-card {
+            background: #fff;
+            border-radius: 15px;
             padding: 12px;
-            border-radius: 10px;
             margin-bottom: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-
-        .row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
-        .hapus {
-            color: red;
-            font-size: 13px;
+        img {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .cart-info { flex: 1; }
+        .cart-name { font-size: 17px; font-weight: bold; }
+        .cart-note { font-size: 13px; color: #666; margin-top: 3px; }
+
+        .price { color: #FF7A00; font-weight: bold; margin-top: 5px; }
+
+        .qty-box {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .checkout-btn {
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            right: 15px;
+            margin-top: 15px;
+            display: block;
+            text-align: center;
             background: #FF7A00;
             color: white;
-            padding: 14px;
+            padding: 12px;
             border-radius: 10px;
-            text-align: center;
-            font-size: 18px;
             text-decoration: none;
+            font-size: 17px;
+            font-weight: bold;
         }
     </style>
 </head>
-
 <body>
 
-<h2>Keranjang</h2>
+<div class="container">
 
-@foreach($items as $i)
-<div class="item">
-    <div class="row">
-        <div>
-            <b>{{ $i->menu->nama }}</b> (x{{ $i->jumlah }})
-            <br>
-            <small>{{ $i->catatan }}</small>
+    <div class="title">Keranjang</div>
+
+    @forelse($items as $item)
+    <div class="cart-card">
+        <img src="{{ asset('storage/' . $item->menu->foto) }}">
+
+        <div class="cart-info">
+            <div class="cart-name">{{ $item->menu->nama }}</div>
+            <div class="cart-note">Catatan: {{ $item->catatan ?? '-' }}</div>
+            <div class="price">Rp {{ number_format($item->menu->harga, 0, ',', '.') }}</div>
         </div>
 
-        <form action="{{ route('keranjang.hapus', $i->id) }}" method="POST">
-            @csrf
-            @method('DELETE')
-            <button class="hapus">Hapus</button>
-        </form>
+        <div class="qty-box">
+            <div>{{ $item->qty }}x</div>
+        </div>
     </div>
+    @empty
+    <p style="text-align:center; margin-top:20px;">Keranjang masih kosong.</p>
+    @endforelse
+
+
+    @if(count($items) > 0)
+    <div class="total-box">
+        Total: Rp {{ number_format($total, 0, ',', '.') }}
+    </div>
+
+    <a href="{{ route('pesanan.checkout') }}" class="checkout-btn">
+        Lanjut Pembayaran
+    </a>
+    @endif
+
 </div>
-@endforeach
-
-<a href="{{ route('pesanan.checkout') }}" class="checkout-btn">Checkout</a>
-
 </body>
 </html>

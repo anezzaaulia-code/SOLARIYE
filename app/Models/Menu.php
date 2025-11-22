@@ -10,10 +10,11 @@ class Menu extends Model
     protected $primaryKey = 'menu_id';
 
     protected $fillable = [
-        'nama_menu',
+        'nama',
         'harga',
-        'status_menu',
+        'status',
         'gambar',
+        'kategori',
     ];
 
     public function detailPesanan()

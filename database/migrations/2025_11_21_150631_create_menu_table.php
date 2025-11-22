@@ -14,6 +14,7 @@ return new class extends Migration
             $table->decimal('harga', 10, 2);
             $table->enum('status', ['ready', 'habis'])->default('ready');
             $table->string('gambar')->nullable();
+            $table->string('kategori')->nullable();
             $table->timestamps();
         });
     }

@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('supplier', function (Blueprint $table) {
+            $table->increments('supplier_id');
+            $table->string('nama_supplier');
+            $table->string('nomor_telepon');
+            $table->string('alamat')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('supplier');
+    }
+};

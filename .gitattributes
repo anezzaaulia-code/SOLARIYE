@@ -1,11 +1,49 @@
+# ===============================
+# Laravel Recommended Attributes
+# ===============================
+
+# Normalize all text files to LF in repo
 * text=auto eol=lf
 
-*.blade.php diff=html
-*.css diff=css
-*.html diff=html
-*.md diff=markdown
-*.php diff=php
+# Do NOT convert line endings for binary files
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.mp4 binary
+*.mp3 binary
 
-/.github export-ignore
-CHANGELOG.md export-ignore
-.styleci.yml export-ignore
+# PHP, JS, CSS, and Blade files should always be LF
+*.php text eol=lf
+*.blade.php text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.env text eol=lf
+*.txt text eol=lf
+
+# Keep composer.lock stable
+composer.lock -diff
+
+# Keep build assets untouched
+public/build/** binary
+public/storage/** binary
+storage/app/** binary
+storage/framework/** binary
+storage/logs/** binary
+
+# Prevent normalization for vendor (avoid conflict)
+vendor/** -text

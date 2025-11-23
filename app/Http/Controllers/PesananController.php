@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         $pesanan = Pesanan::with('kasir')->orderBy('created_at','desc')->paginate(30);
@@ -25,9 +30,7 @@ class PesananController extends Controller
     }
 
     /**
-     * Request expects:
-     * - items: array of [menu_id, jumlah]
-     * - metode_bayar: tunai|qris|transfer
+     * items => [{menu_id, jumlah}, ...]
      */
     public function store(Request $request)
     {
@@ -47,7 +50,7 @@ class PesananController extends Controller
                 'kode_pesanan' => $kode,
                 'total_harga' => 0,
                 'metode_bayar' => $request->metode_bayar,
-                'status' => 'menunggu',
+                'status' => 'diproses',
                 'kasir_id' => auth()->id(),
             ]);
 
@@ -58,8 +61,7 @@ class PesananController extends Controller
                 $subtotal = $harga * $jumlah;
                 $total += $subtotal;
 
-                PesananDetail::create([
-                    'pesanan_id' => $pesanan->id,
+                $pesanan->detail()->create([
                     'menu_id' => $menu->id,
                     'jumlah' => $jumlah,
                     'harga' => $harga,
@@ -68,10 +70,9 @@ class PesananController extends Controller
             }
 
             $pesanan->total_harga = $total;
-            $pesanan->status = 'diproses';
             $pesanan->save();
 
-            // insert keuangan (pemasukan)
+            // buat keuangan (pemasukan)
             Keuangan::create([
                 'tanggal' => now()->toDateString(),
                 'jenis' => 'pemasukan',
@@ -110,7 +111,6 @@ class PesananController extends Controller
     public function destroy(Pesanan $pesanan)
     {
         DB::transaction(function () use ($pesanan) {
-            // hapus keuangan terkait
             Keuangan::where('ref_id', $pesanan->id)->where('jenis','pemasukan')->delete();
             $pesanan->detail()->delete();
             $pesanan->delete();

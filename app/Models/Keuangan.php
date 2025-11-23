@@ -18,11 +18,22 @@ class Keuangan extends Model
         'nominal',
         'keterangan',
         'ref_id',
+        'ref_table',
         'created_by',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // relasi dinamis
+    public function referensi()
+    {
+        return match ($this->ref_table) {
+            'pesanan'   => $this->belongsTo(Pesanan::class, 'ref_id'),
+            'pembelian' => $this->belongsTo(PembelianBahan::class, 'ref_id'),
+            default     => null,
+        };
     }
 }

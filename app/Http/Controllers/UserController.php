@@ -6,110 +6,91 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    // ============================
-    // LIST USER
-    // ============================
+    public function __construct()
+    {
+        $this->middleware('auth');
+        // optionally: $this->middleware('role:admin')->except(['profile']);
+    }
+
     public function index()
     {
-        $users = User::orderBy('id', 'desc')->get();
+        $users = User::orderBy('id','desc')->paginate(20);
         return view('users.index', compact('users'));
     }
 
-    // ============================
-    // FORM CREATE
-    // ============================
     public function create()
     {
         return view('users.create');
     }
 
-    // ============================
-    // STORE USER BARU
-    // ============================
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'role' => ['required', Rule::in(['admin','kasir'])],
+            'password' => 'required|string|min:6|confirmed',
+            'role' => 'required|in:admin,kasir',
         ]);
 
-        User::create([
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'status' => 'aktif',
-        ]);
+        $data['password'] = Hash::make($data['password']);
 
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
+        DB::transaction(function() use ($data) {
+            User::create($data);
+        });
+
+        return redirect()->route('users.index')->with('success','User berhasil dibuat.');
     }
 
-    // ============================
-    // EDIT USER
-    // ============================
     public function edit(User $user)
     {
         return view('users.edit', compact('user'));
     }
 
-    // ============================
-    // UPDATE USER
-    // ============================
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $data = $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => ['required','email', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(['admin','kasir'])],
+            'email' => ['required','email', Rule::unique('users','email')->ignore($user->id)],
+            'role' => 'required|in:admin,kasir',
         ]);
 
-        $user->update([
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'role' => $request->role,
-        ]);
-
-        return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
+        $user->update($data);
+        return redirect()->route('users.index')->with('success','User berhasil diupdate.');
     }
 
-    // ============================
-    // DELETE USER
-    // ============================
-    public function destroy(User $user)
+    public function resetPassword(Request $request, User $user)
     {
-        if ($user->role === 'admin') {
-            return back()->with('error', 'Admin tidak boleh dihapus.');
-        }
-
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
-    }
-
-    // ============================
-    // RESET PASSWORD
-    // ============================
-    public function resetPassword(User $user)
-    {
-        $user->update([
-            'password' => Hash::make('password123'), // default reset
+        $data = $request->validate([
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        return back()->with('success', 'Password berhasil direset ke: password123');
+        $user->password = Hash::make($data['password']);
+        $user->save();
+
+        return back()->with('success','Password berhasil direset.');
     }
 
-    // ============================
-    // NONAKTIFKAN / AKTIFKAN USER
-    // ============================
     public function toggleStatus(User $user)
     {
+        // toggling via 'status' column (aktif/nonaktif)
         $user->status = ($user->status === 'aktif') ? 'nonaktif' : 'aktif';
         $user->save();
 
-        return back()->with('success', 'Status user berhasil diubah.');
+        return back()->with('success','Status user diubah.');
+    }
+
+    public function destroy(User $user)
+    {
+        if (auth()->id() == $user->id) {
+            return back()->with('error','Tidak bisa menghapus akun sendiri.');
+        }
+
+        // safe delete
+        $user->delete();
+        return redirect()->route('users.index')->with('success','User dihapus.');
     }
 }

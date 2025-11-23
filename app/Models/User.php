@@ -15,11 +15,17 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'status'
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    // penting untuk login, biar status dibaca boolean
+    protected $casts = [
+        'status' => 'boolean',
     ];
 
     // RELASI

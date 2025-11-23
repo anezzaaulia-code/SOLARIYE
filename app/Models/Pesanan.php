@@ -29,9 +29,8 @@ class Pesanan extends Model
         return $this->hasMany(PesananDetail::class, 'pesanan_id');
     }
 
-    // optional relasi ke keuangan (jika ref_id dipakai)
     public function keuangan()
     {
-        return $this->hasOne(Keuangan::class, 'ref_id');
+        return $this->hasOne(Keuangan::class, 'ref_id')->where('ref_table', 'pesanan');
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\POSController;
 use App\Http\Controllers\MenuController;
@@ -19,17 +21,40 @@ use App\Http\Controllers\DashboardController;
 |--------------------------------------------------------------------------
 */
 
-// Auth routes (login/logout)
-// Auth::routes();
+// =====================
+// AUTH
+// =====================
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login')
+    ->middleware('guest');
 
-// Dashboard (admin & kasir)
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::post('/login', [LoginController::class, 'login'])
+    ->name('login.submit');
+
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout');
+
+// =====================
+// DASHBOARD
+// =====================
+
+// Redirect otomatis setelah login
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+});
+
+// Dashboard untuk admin & kasir tetapi view-nya beda
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+});
 
 // ======================
-// User management (Admin only)
+// ADMIN ONLY
 // ======================
-Route::middleware(['auth','role:admin'])->group(function() {
+Route::middleware(['auth', 'role:admin'])->group(function () {
+
+    // User management
     Route::resource('users', UserController::class);
     Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::get('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
@@ -43,7 +68,7 @@ Route::middleware(['auth','role:admin'])->group(function() {
     Route::resource('pembelian', PembelianBahanController::class);
     Route::resource('pembelian-detail', DetailPembelianBahanController::class);
 
-    // Stok Harian
+    // Stok harian
     Route::resource('stok', StokHarianController::class);
 
     // Keuangan
@@ -51,9 +76,9 @@ Route::middleware(['auth','role:admin'])->group(function() {
 });
 
 // ======================
-// POS (Kasir only)
+// KASIR ONLY
 // ======================
-Route::middleware(['auth','role:kasir'])->group(function() {
+Route::middleware(['auth', 'role:kasir'])->group(function () {
     Route::get('pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('pos', [POSController::class, 'store'])->name('pos.store');
 });
@@ -61,6 +86,6 @@ Route::middleware(['auth','role:kasir'])->group(function() {
 // ======================
 // Pesanan (Admin & Kasir)
 // ======================
-Route::middleware(['auth'])->group(function() {
+Route::middleware(['auth'])->group(function () {
     Route::resource('pesanan', PesananController::class);
 });

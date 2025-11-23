@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\KategoriMenu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class KategoriMenuController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth','role:admin']);
+    }
+
     public function index()
     {
         $kategori = KategoriMenu::orderBy('nama')->paginate(20);

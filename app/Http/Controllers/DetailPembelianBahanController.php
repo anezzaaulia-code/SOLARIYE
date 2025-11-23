@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DetailPembelianBahan;
-use App\Models\PembelianBahan;
 use App\Models\BahanBaku;
+use App\Models\DetailPembelianBahan;
+use App\Models\Keuangan;
+use App\Models\PembelianBahan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,83 +13,80 @@ class DetailPembelianBahanController extends Controller
 {
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'pembelian_id' => 'required|exists:pembelian_bahan,id',
             'bahan_id' => 'required|exists:bahan_baku,id',
-            'jumlah' => 'required|integer|min:1',
-            'harga_satuan' => 'required|numeric|min:0',
+            'jumlah' => 'required|numeric|min:1',
+            'harga_satuan' => 'required|numeric|min:1',
         ]);
 
-        DB::transaction(function () use ($data) {
-            $subtotal = $data['jumlah'] * $data['harga_satuan'];
+        DB::transaction(function () use ($request) {
+
+            $subtotal = $request->jumlah * $request->harga_satuan;
+
+            // Simpan detail
             $detail = DetailPembelianBahan::create([
-                'pembelian_id' => $data['pembelian_id'],
-                'bahan_id' => $data['bahan_id'],
-                'jumlah' => $data['jumlah'],
-                'harga_satuan' => $data['harga_satuan'],
+                'pembelian_id' => $request->pembelian_id,
+                'bahan_id' => $request->bahan_id,
+                'jumlah' => $request->jumlah,
+                'harga_satuan' => $request->harga_satuan,
                 'subtotal' => $subtotal,
             ]);
 
-            // tambah ke total header
-            $header = PembelianBahan::find($data['pembelian_id']);
-            $header->total_harga = ($header->total_harga ?? 0) + $subtotal;
+            // Update stok bahan
+            $bahan = BahanBaku::find($request->bahan_id);
+            $bahan->stok += $request->jumlah;
+            $bahan->save();
+
+            // Update TOTAL pembelian
+            $header = PembelianBahan::find($request->pembelian_id);
+            $header->total_harga = DetailPembelianBahan::where('pembelian_id', $header->id)->sum('subtotal');
             $header->save();
 
-            // update stok bahan
-            $b = BahanBaku::find($data['bahan_id']);
-            if ($b) {
-                $b->stok_akhir = ($b->stok_akhir ?? 0) + $data['jumlah'];
-                $b->save();
-            }
+            // Update atau buat keuangan
+            $keu = Keuangan::firstOrCreate(
+                ['jenis' => 'pengeluaran', 'ref_id' => $header->id],
+                ['nominal' => 0]
+            );
 
-            // update/insert keuangan pengeluaran
-            $keu = \App\Models\Keuangan::firstOrNew([
-                'jenis' => 'pengeluaran',
-                'sumber' => 'supplier',
-                'ref_id' => $header->id
-            ]);
+            $keu->nominal = $header->total_harga;
             $keu->tanggal = $header->tanggal;
-            $keu->nominal = \App\Models\DetailPembelianBahan::where('pembelian_id', $header->id)->sum('subtotal');
-            $keu->keterangan = 'Pembelian bahan ID:'.$header->id;
-            $keu->created_by = auth()->id();
             $keu->save();
         });
 
-        return back()->with('success','Detail pembelian ditambahkan.');
+        return back()->with('success', 'Detail pembelian ditambahkan.');
     }
 
-    public function destroy(DetailPembelianBahan $detailPembelianBahan)
+    public function destroy($id)
     {
-        DB::transaction(function () use ($detailPembelianBahan) {
-            // revert stok
-            $b = BahanBaku::find($detailPembelianBahan->bahan_id);
-            if ($b) {
-                $b->stok_akhir = max(0, ($b->stok_akhir ?? 0) - $detailPembelianBahan->jumlah);
-                $b->save();
-            }
+        DB::transaction(function () use ($id) {
 
-            $pemb = $detailPembelianBahan->pembelian;
-            $detailPembelianBahan->delete();
+            $detail = DetailPembelianBahan::findOrFail($id);
+            $pembelian = PembelianBahan::find($detail->pembelian_id);
 
-            // recalc header total
-            $pemb->total_harga = $pemb->detail()->sum('subtotal');
-            $pemb->save();
+            // Kembalikan stok
+            $bahan = BahanBaku::find($detail->bahan_id);
+            $bahan->stok -= $detail->jumlah;
+            $bahan->save();
 
-            // update keuangan
-            \App\Models\Keuangan::where('ref_id', $pemb->id)->delete();
-            if ($pemb->total_harga > 0) {
-                \App\Models\Keuangan::create([
-                    'tanggal' => $pemb->tanggal,
-                    'jenis' => 'pengeluaran',
-                    'sumber' => 'supplier',
-                    'nominal' => $pemb->total_harga,
-                    'keterangan' => 'Pembelian bahan ID:'.$pemb->id,
-                    'ref_id' => $pemb->id,
-                    'created_by' => auth()->id(),
-                ]);
+            // Hapus detail
+            $detail->delete();
+
+            // Update total pembelian
+            $pembelian->total_harga = DetailPembelianBahan::where('pembelian_id', $pembelian->id)->sum('subtotal');
+            $pembelian->save();
+
+            // Update keuangan (tidak dihapus, cukup diupdate)
+            $keu = Keuangan::where('jenis', 'pengeluaran')
+                ->where('ref_id', $pembelian->id)
+                ->first();
+
+            if ($keu) {
+                $keu->nominal = $pembelian->total_harga;
+                $keu->save();
             }
         });
 
-        return back()->with('success','Detail pembelian dihapus dan stok direvert.');
+        return back()->with('success', 'Detail pembelian dihapus.');
     }
 }

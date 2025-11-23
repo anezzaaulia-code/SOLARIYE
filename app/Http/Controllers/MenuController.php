@@ -10,6 +10,11 @@ use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth','role:admin']);
+    }
+
     public function index()
     {
         $menus = Menu::with('kategori')->orderBy('nama')->paginate(20);
@@ -29,7 +34,7 @@ class MenuController extends Controller
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:4096',
             'status' => 'nullable|in:tersedia,habis,nonaktif',
         ]);
 
@@ -57,12 +62,11 @@ class MenuController extends Controller
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:4096',
             'status' => 'nullable|in:tersedia,habis,nonaktif',
         ]);
 
         if ($request->hasFile('foto')) {
-            // delete old if exists
             if ($menu->foto) Storage::disk('public')->delete($menu->foto);
             $data['foto'] = $request->file('foto')->store('menu','public');
         }

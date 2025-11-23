@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth','role:admin']);
+    }
+
     public function index()
     {
         $suppliers = Supplier::orderBy('nama_supplier')->paginate(20);

@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->string('kontak')->nullable();
             $table->string('email')->nullable();
             $table->text('alamat')->nullable();
+            $table->string('jenis_barang')->nullable(); // tambahan
             $table->text('keterangan')->nullable();
             $table->timestamps();
         });

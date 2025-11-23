@@ -11,14 +11,27 @@ class BahanBaku extends Model
 
     protected $table = 'bahan_baku';
 
-    // gunakan primary key default "id" (konsisten)
     protected $fillable = [
         'nama_bahan',
         'satuan',
         'stok_awal',
         'stok_akhir',
         'status_warna',
+        'batas_kuning',
+        'batas_merah',
     ];
+
+    // Accessor otomatis untuk status warna
+    public function getStatusWarnaAttribute($value)
+    {
+        if ($this->stok_akhir <= $this->batas_merah) {
+            return 'merah';
+        } elseif ($this->stok_akhir <= $this->batas_kuning) {
+            return 'kuning';
+        } else {
+            return 'hijau';
+        }
+    }
 
     public function detailPembelian()
     {

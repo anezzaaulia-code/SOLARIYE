@@ -16,12 +16,11 @@ class Supplier extends Model
         'kontak',
         'email',
         'alamat',
-        'kategori',
         'keterangan',
     ];
 
     public function pembelian()
     {
-        return $this->hasMany(PembelianSupplier::class, 'supplier_id');
+        return $this->hasMany(PembelianBahan::class, 'supplier_id');
     }
 }

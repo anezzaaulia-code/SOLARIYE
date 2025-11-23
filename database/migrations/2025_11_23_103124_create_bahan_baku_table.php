@@ -4,22 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
         Schema::create('bahan_baku', function (Blueprint $table) {
-            $table->increments('bahan_id');
+            $table->id();
             $table->string('nama_bahan');
-            $table->string('satuan');
-            $table->integer('stok_awal')->default(0);
-            $table->integer('stok_akhir')->default(0);
+            $table->string('satuan', 50);
+            $table->integer('stok_awal');
+            $table->integer('stok_akhir');
+            $table->enum('status_warna', ['aman','menipis','habis']);
             $table->timestamps();
         });
     }
 
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('bahan_baku');
     }
 };

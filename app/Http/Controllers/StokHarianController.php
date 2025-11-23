@@ -3,47 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\StokHarian;
+use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 
 class StokHarianController extends Controller
 {
     public function index()
     {
-        return view('admin.stok.index', [
-            'stok' => StokHarian::orderBy('tanggal', 'desc')->get()
-        ]);
+        $stok = StokHarian::with('bahan')->orderBy('tanggal','desc')->paginate(30);
+        return view('stok.index', compact('stok'));
+    }
+
+    public function create()
+    {
+        return view('stok.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_bahan' => 'required',
-            'stok_awal' => 'required|numeric',
-            'stok_akhir' => 'required|numeric'
+        $data = $request->validate([
+            'tanggal' => 'required|date',
+            'bahan_id' => 'required|exists:bahan_baku,id',
+            'stok_awal' => 'required|integer|min:0',
+            'stok_akhir' => 'required|integer|min:0',
         ]);
 
-        $pemakaian = $request->stok_awal - $request->stok_akhir;
+        // determine status
+        $status = 'aman';
+        if ($data['stok_akhir'] <= 0) $status = 'habis';
+        elseif ($data['stok_akhir'] <= 10) $status = 'menipis';
 
-        if ($request->stok_akhir == 0) {
-            $warna = 'habis';
-        } elseif ($request->stok_akhir <= $request->batas_minimal) {
-            $warna = 'menipis';
-        } else {
-            $warna = 'aman';
+        $data['status_warna'] = $status;
+
+        StokHarian::create($data);
+
+        // optional: sync bahan stok_akhir to latest
+        $b = BahanBaku::find($data['bahan_id']);
+        if ($b) {
+            $b->stok_awal = $data['stok_awal'];
+            $b->stok_akhir = $data['stok_akhir'];
+            $b->status_warna = $status;
+            $b->save();
         }
 
-        StokHarian::create([
-            'nama_bahan' => $request->nama_bahan,
-            'satuan' => $request->satuan,
-            'stok_awal' => $request->stok_awal,
-            'stok_akhir' => $request->stok_akhir,
-            'pemakaian' => $pemakaian,
-            'batas_minimal' => $request->batas_minimal,
-            'status_warna' => $warna,
-            'tanggal' => now()->toDateString(),
-            'keterangan' => $request->keterangan,
-        ]);
+        return redirect()->route('stok-harian.index')->with('success','Stok harian disimpan.');
+    }
 
-        return back()->with('success', 'Stok bahan berhasil diperbarui');
+    public function destroy(StokHarian $stokHarian)
+    {
+        $stokHarian->delete();
+        return back()->with('success','Catatan stok harian dihapus.');
     }
 }

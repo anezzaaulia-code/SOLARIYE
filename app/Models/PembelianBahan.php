@@ -5,21 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Keuangan extends Model
+class PembelianBahan extends Model
 {
     use HasFactory;
 
-    protected $table = 'keuangan';
+    protected $table = 'pembelian_bahan';
 
     protected $fillable = [
+        'supplier_id',
         'tanggal',
-        'jenis',
-        'sumber',
-        'nominal',
+        'total_harga',
         'keterangan',
-        'ref_id',
         'created_by',
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function detail()
+    {
+        return $this->hasMany(DetailPembelianBahan::class, 'pembelian_id');
+    }
 
     public function user()
     {

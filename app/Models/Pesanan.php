@@ -12,30 +12,26 @@ class Pesanan extends Model
     protected $table = 'pesanan';
 
     protected $fillable = [
-        'nomor_nota',
-        'user_id',
+        'kode_pesanan',
         'total_harga',
-        'diskon',
-        'bayar',
-        'kembalian',
-        'metode_pembayaran',
+        'metode_bayar',
         'status',
-        'catatan',
-    ];
-
-    protected $casts = [
-        'total_harga' => 'integer',
-        'bayar' => 'integer',
-        'kembalian' => 'integer',
+        'kasir_id',
     ];
 
     public function kasir()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'kasir_id');
     }
 
     public function detail()
     {
         return $this->hasMany(PesananDetail::class, 'pesanan_id');
+    }
+
+    // optional relasi ke keuangan (jika ref_id dipakai)
+    public function keuangan()
+    {
+        return $this->hasOne(Keuangan::class, 'ref_id');
     }
 }

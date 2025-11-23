@@ -17,7 +17,7 @@ class KategoriMenu extends Model
         'status',
     ];
 
-    public function menus()
+    public function menu()
     {
         return $this->hasMany(Menu::class, 'kategori_id');
     }

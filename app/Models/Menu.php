@@ -13,17 +13,11 @@ class Menu extends Model
 
     protected $fillable = [
         'kategori_id',
-        'kode_menu',
         'nama',
-        'deskripsi',
         'harga',
+        'deskripsi',
         'foto',
         'status',
-        'tipe',
-    ];
-
-    protected $casts = [
-        'harga' => 'integer',
     ];
 
     public function kategori()
@@ -31,13 +25,8 @@ class Menu extends Model
         return $this->belongsTo(KategoriMenu::class, 'kategori_id');
     }
 
-    public function pesananDetails()
+    public function pesananDetail()
     {
         return $this->hasMany(PesananDetail::class, 'menu_id');
-    }
-
-    public function stokLogs()
-    {
-        return $this->hasMany(StokLog::class, 'nama_bahan', 'nama'); // optional mapping depending on implementation
     }
 }

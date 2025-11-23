@@ -14,16 +14,9 @@ class PesananDetail extends Model
     protected $fillable = [
         'pesanan_id',
         'menu_id',
-        'nama_menu',
-        'qty',
-        'harga_satuan',
+        'jumlah',
+        'harga',
         'subtotal',
-    ];
-
-    protected $casts = [
-        'qty' => 'integer',
-        'harga_satuan' => 'integer',
-        'subtotal' => 'integer',
     ];
 
     public function pesanan()

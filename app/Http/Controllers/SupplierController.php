@@ -9,29 +9,51 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        return view('admin.supplier.index', [
-            'supplier' => Supplier::latest()->get()
-        ]);
+        $suppliers = Supplier::orderBy('nama_supplier')->paginate(20);
+        return view('supplier.index', compact('suppliers'));
+    }
+
+    public function create()
+    {
+        return view('supplier.create');
     }
 
     public function store(Request $request)
     {
-        $request->validate(['nama_supplier' => 'required']);
+        $data = $request->validate([
+            'nama_supplier' => 'required|string|max:255',
+            'kontak' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'alamat' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ]);
 
-        Supplier::create($request->all());
+        Supplier::create($data);
+        return redirect()->route('supplier.index')->with('success','Supplier dibuat.');
+    }
 
-        return back()->with('success', 'Supplier berhasil ditambah');
+    public function edit(Supplier $supplier)
+    {
+        return view('supplier.edit', compact('supplier'));
     }
 
     public function update(Request $request, Supplier $supplier)
     {
-        $supplier->update($request->all());
-        return back()->with('success', 'Supplier diperbarui');
+        $data = $request->validate([
+            'nama_supplier' => 'required|string|max:255',
+            'kontak' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'alamat' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $supplier->update($data);
+        return redirect()->route('supplier.index')->with('success','Supplier diupdate.');
     }
 
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
-        return back()->with('success', 'Supplier dihapus');
+        return back()->with('success','Supplier dihapus.');
     }
 }

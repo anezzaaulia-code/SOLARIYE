@@ -3,27 +3,41 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Menu extends Model
 {
+    use HasFactory;
+
     protected $table = 'menu';
-    protected $primaryKey = 'menu_id';
 
     protected $fillable = [
+        'kategori_id',
+        'kode_menu',
         'nama',
+        'deskripsi',
         'harga',
+        'foto',
         'status',
-        'gambar',
-        'kategori',
+        'tipe',
     ];
 
-    public function detailPesanan()
+    protected $casts = [
+        'harga' => 'integer',
+    ];
+
+    public function kategori()
     {
-        return $this->hasMany(DetailPesanan::class, 'menu_id');
+        return $this->belongsTo(KategoriMenu::class, 'kategori_id');
     }
 
-    public function keranjang()
+    public function pesananDetails()
     {
-        return $this->hasMany(Keranjang::class, 'menu_id');
+        return $this->hasMany(PesananDetail::class, 'menu_id');
+    }
+
+    public function stokLogs()
+    {
+        return $this->hasMany(StokLog::class, 'nama_bahan', 'nama'); // optional mapping depending on implementation
     }
 }

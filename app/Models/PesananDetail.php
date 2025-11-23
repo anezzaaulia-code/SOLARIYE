@@ -3,19 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class DetailPesanan extends Model
+class PesananDetail extends Model
 {
-    protected $table = 'detail_pesanan';
-    protected $primaryKey = 'detail_id';
+    use HasFactory;
+
+    protected $table = 'pesanan_detail';
 
     protected $fillable = [
         'pesanan_id',
         'menu_id',
-        'jumlah',
+        'nama_menu',
+        'qty',
         'harga_satuan',
         'subtotal',
-        'catatan'
+    ];
+
+    protected $casts = [
+        'qty' => 'integer',
+        'harga_satuan' => 'integer',
+        'subtotal' => 'integer',
     ];
 
     public function pesanan()

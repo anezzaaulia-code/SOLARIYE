@@ -7,59 +7,43 @@ use Illuminate\Http\Request;
 
 class StokHarianController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return view('admin.stok.index', [
+            'stok' => StokHarian::orderBy('tanggal', 'desc')->get()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'nama_bahan' => 'required',
+            'stok_awal' => 'required|numeric',
+            'stok_akhir' => 'required|numeric'
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(StokHarian $stokHarian)
-    {
-        //
-    }
+        $pemakaian = $request->stok_awal - $request->stok_akhir;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(StokHarian $stokHarian)
-    {
-        //
-    }
+        if ($request->stok_akhir == 0) {
+            $warna = 'habis';
+        } elseif ($request->stok_akhir <= $request->batas_minimal) {
+            $warna = 'menipis';
+        } else {
+            $warna = 'aman';
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, StokHarian $stokHarian)
-    {
-        //
-    }
+        StokHarian::create([
+            'nama_bahan' => $request->nama_bahan,
+            'satuan' => $request->satuan,
+            'stok_awal' => $request->stok_awal,
+            'stok_akhir' => $request->stok_akhir,
+            'pemakaian' => $pemakaian,
+            'batas_minimal' => $request->batas_minimal,
+            'status_warna' => $warna,
+            'tanggal' => now()->toDateString(),
+            'keterangan' => $request->keterangan,
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(StokHarian $stokHarian)
-    {
-        //
+        return back()->with('success', 'Stok bahan berhasil diperbarui');
     }
 }

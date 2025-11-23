@@ -8,59 +8,81 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    // List semua user (admin bisa lihat semua)
     public function index()
     {
-        $users = User::all();
-        return view('admin.user.index', compact('users'));
+        return view('admin.user.index', [
+            'users' => User::orderBy('role')->get()
+        ]);
     }
 
-    public function create()
-    {
-        return view('admin.user.create');
-    }
-
+    // Create user baru (admin tambah admin/kasir)
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|unique:users,email',
-            'password' => 'required',
-            'role' => 'required'
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users,email',
+            'role'     => 'required|in:admin,kasir',
+            'password' => 'required|min:6'
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'role'     => $request->role,
             'password' => Hash::make($request->password),
+            'status'   => 'aktif',
         ]);
 
-        return redirect()->route('user.index')->with('success', 'User berhasil dibuat.');
+        return back()->with('success', 'User berhasil dibuat');
     }
 
-    public function edit(User $user)
-    {
-        return view('admin.user.edit', compact('user'));
-    }
-
+    // Update user
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required',
-            'role' => 'required'
+            'name'  => 'required',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'role'  => 'required|in:admin,kasir',
+        ]);
+
+        $user->update($request->only('name', 'email', 'role'));
+
+        return back()->with('success', 'User berhasil diupdate');
+    }
+
+    // Reset password user
+    public function resetPassword(Request $request, User $user)
+    {
+        $request->validate([
+            'password' => 'required|min:6'
         ]);
 
         $user->update([
-            'name' => $request->name,
-            'role' => $request->role
+            'password' => Hash::make($request->password)
         ]);
 
-        return redirect()->route('user.index')->with('success', 'User berhasil diupdate.');
+        return back()->with('success', 'Password berhasil direset');
     }
 
+    // Nonaktifkan user
+    public function nonaktifkan(User $user)
+    {
+        $user->update(['status' => 'nonaktif']);
+        return back()->with('success', 'User dinonaktifkan');
+    }
+
+    // Aktifkan user
+    public function aktifkan(User $user)
+    {
+        $user->update(['status' => 'aktif']);
+        return back()->with('success', 'User diaktifkan');
+    }
+
+    // Hapus user
     public function destroy(User $user)
     {
         $user->delete();
-        return back()->with('success', 'User dihapus.');
+        return back()->with('success', 'User berhasil dihapus');
     }
 }

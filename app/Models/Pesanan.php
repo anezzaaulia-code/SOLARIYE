@@ -3,25 +3,39 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Pesanan extends Model
 {
+    use HasFactory;
+
     protected $table = 'pesanan';
-    protected $primaryKey = 'pesanan_id';
 
     protected $fillable = [
-        'nama_pembeli',
-        'titik_antar',
-        'ongkir',
-        'metode_bayar',
-        'status_pembayaran',
-        'tipe_pesanan',
-        'status',
+        'nomor_nota',
+        'user_id',
         'total_harga',
+        'diskon',
+        'bayar',
+        'kembalian',
+        'metode_pembayaran',
+        'status',
+        'catatan',
     ];
 
-    public function detailPesanan()
+    protected $casts = [
+        'total_harga' => 'integer',
+        'bayar' => 'integer',
+        'kembalian' => 'integer',
+    ];
+
+    public function kasir()
     {
-        return $this->hasMany(DetailPesanan::class, 'pesanan_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function detail()
+    {
+        return $this->hasMany(PesananDetail::class, 'pesanan_id');
     }
 }

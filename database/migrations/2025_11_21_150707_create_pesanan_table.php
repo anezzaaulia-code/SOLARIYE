@@ -4,21 +4,26 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class() extends Migration {
     public function up(): void
     {
         Schema::create('pesanan', function (Blueprint $table) {
-            $table->increments('pesanan_id');
-            $table->string('nama_pembeli');
-            $table->string('titik_antar')->nullable();
-            $table->integer('ongkir')->default(0); // sesuai permintaan
-            $table->enum('metode_bayar', ['transfer', 'tunai']);
-            $table->enum('status_pembayaran', ['belum', 'lunas'])->default('belum');
-            $table->enum('tipe_pesanan', ['online', 'offline'])->default('online');
-            $table->enum('status', ['menunggu', 'diproses', 'dikirim', 'selesai'])->default('menunggu');
-            $table->decimal('total_harga', 12, 2)->default(0);
+            $table->id();
+            $table->string('nomor_nota')->unique();
+            $table->foreignId('user_id')->nullable()
+                  ->constrained('users')
+                  ->onUpdate('cascade')
+                  ->onDelete('set null');
+            $table->unsignedBigInteger('total_harga')->default(0);
+            $table->integer('diskon')->default(0);
+            $table->unsignedBigInteger('bayar')->nullable();
+            $table->unsignedBigInteger('kembalian')->nullable();
+            $table->enum('metode_pembayaran', ['cash', 'qris', 'transfer', 'other'])->nullable();
+            $table->enum('status', ['pending', 'diproses', 'selesai', 'batal'])->default('pending');
+            $table->text('catatan')->nullable();
             $table->timestamps();
+
+            $table->index(['nomor_nota', 'status']);
         });
     }
 

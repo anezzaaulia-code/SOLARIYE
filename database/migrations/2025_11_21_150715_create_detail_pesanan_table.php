@@ -4,32 +4,31 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class() extends Migration {
     public function up(): void
     {
-        Schema::create('detail_pesanan', function (Blueprint $table) {
-            $table->increments('detail_id');
-            $table->integer('pesanan_id')->unsigned();
-            $table->integer('menu_id')->unsigned();
-            $table->integer('jumlah');
-            $table->decimal('harga_satuan', 12, 2);
-            $table->decimal('subtotal', 12, 2);
-            $table->string('catatan')->nullable();
+        Schema::create('pesanan_detail', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('pesanan_id')
+                  ->constrained('pesanan')
+                  ->onUpdate('cascade')
+                  ->onDelete('cascade');
+            $table->foreignId('menu_id')
+                  ->constrained('menu')
+                  ->onUpdate('cascade')
+                  ->onDelete('restrict');
+            $table->string('nama_menu'); // snapshot nama
+            $table->integer('qty')->default(1);
+            $table->unsignedBigInteger('harga_satuan')->default(0);
+            $table->unsignedBigInteger('subtotal')->default(0);
             $table->timestamps();
 
-            $table->foreign('pesanan_id')
-                ->references('pesanan_id')->on('pesanan')
-                ->onDelete('cascade');
-
-            $table->foreign('menu_id')
-                ->references('menu_id')->on('menu')
-                ->onDelete('cascade');
+            $table->index(['pesanan_id', 'menu_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('detail_pesanan');
+        Schema::dropIfExists('pesanan_detail');
     }
 };

@@ -1,28 +1,23 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Http\Responses;
 
-use Closure;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
-
-class KasirMiddleware
+class LoginResponse implements LoginResponseContract
 {
-    public function handle($request, Closure $next)
+    public function toResponse($request)
     {
-
         $user = $request->user();
 
         if ($user->role === 'admin') {
-            return redirect()->intended('/users');
+            return redirect()->intended('/dashboard');
         }
 
         if ($user->role === 'kasir') {
-            return redirect()->intended('/dashboard/sales');
+            return redirect()->intended('/pos');
         }
 
         return redirect()->intended('/dashboard');
-
     }
 }

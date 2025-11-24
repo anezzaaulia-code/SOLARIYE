@@ -12,8 +12,11 @@ return new class extends Migration
     public function up()
 {
     Schema::table('users', function (Blueprint $table) {
-        $table->boolean('status')->default(1); // 1 = aktif, 0 = nonaktif
+    if (!Schema::hasColumn('users', 'status')) {
+        $table->tinyInteger('status')->default(1);
+    }
     });
+
 }
 
 public function down()

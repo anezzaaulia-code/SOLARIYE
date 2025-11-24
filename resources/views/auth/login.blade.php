@@ -1,43 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta nama="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body class="bg-light">
-    <div class="container d-flex justify-content-center align-items-center"
-         style="min-height: 100vh;">
-         
-        <div class="card shadow p-4" style="width: 380px;">
-            <h4 class="mb-3 text-center">Login</h4>
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4 shadow" style="width: 100%; max-width: 400px;">
+            <h3 class="card-title text-center mb-3">Login</h3>
 
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login.submit') }}">
+            <form method="POST" action="{{ route('login') }}">
                 @csrf
 
                 <div class="mb-3">
-                    <label>Email</label>
-                    <input type="text" name="email" class="form-control"
-                           required>
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" nama="email" value="{{ old('email') }}" required>
+                    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="mb-3">
-                    <label>Password</label>
-                    <input type="password" name="password"
-                        class="form-control" required>
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" nama="password" required>
+                    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <button class="btn btn-primary w-100" type="submit">Login</button>
-            </form>
-        </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" nama="remember">
+                    <label class="form-check-label" for="remember">Remember Me</label>
+                </div>
 
+                <button type="submit" class="btn btn-success w-100">Login</button>
+            </form>
+
+            <p class="mt-3 text-center">Don't have an account? <a href="{{ route('register') }}">Register</a></p>
+        </div>
     </div>
 </body>
 </html>

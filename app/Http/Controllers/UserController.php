@@ -29,6 +29,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         $data = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',

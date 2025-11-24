@@ -77,13 +77,27 @@
 
     {{-- TOPBAR --}}
     <div class="topbar d-flex justify-content-between align-items-center">
+
         <span class="fw-bold fs-5">Dashboard</span>
 
-        <div>
+        <div class="d-flex align-items-center">
+
             <i class="bi bi-bell me-3 fs-5"></i>
+
             <span class="me-2">admin</span>
-            <img src="https://i.pravatar.cc/40" class="rounded-circle" width="35">
+
+            <img src="https://i.pravatar.cc/40" class="rounded-circle me-3" width="35">
+
+            {{-- 🔴 TOMBOL LOGOUT --}}
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+            </form>
+
         </div>
+
     </div>
 
     {{-- CONTENT --}}

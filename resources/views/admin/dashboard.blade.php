@@ -57,10 +57,10 @@
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Pensil 2B', 'Aqua', 'Buku Sidu', 'Pulpen Pilot', 'Pop Mie'],
+            labels: ['Mie Goreng', 'Nasi Goreng', 'Kwetiaw Goreng'],
             datasets: [{
                 label: 'Jumlah Terjual',
-                data: [5, 2, 2, 2, 1],
+                data: [5, 2, 4],
                 borderWidth: 1
             }]
         }

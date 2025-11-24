@@ -8,15 +8,15 @@ use App\Http\Controllers\PesananController;
 
 class POSController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth','role:kasir']);
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware(['auth','kasir']);
+    // }
 
     public function index()
     {
         $menus = Menu::where('status','tersedia')->orderBy('nama')->get();
-        return view('pos.index', compact('menus'));
+        return view('kasir.pos.index', compact('menus'));
     }
 
     public function store(Request $request)

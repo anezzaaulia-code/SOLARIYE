@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - SOLARIYE</title>
+
+    <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
     <style>
         body {
             min-height: 100vh;
@@ -50,7 +53,9 @@
             <i class="bi bi-speedometer2 fs-3"></i>
             <span class="fs-5 fw-bold">SOLARIYE</span>
         </a>
+
         <hr>
+
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}" class="nav-link text-white">
@@ -95,31 +100,42 @@
                 </a>
             </li>
         </ul>
+
         <hr>
-        <div>
-            <button class="btn btn-outline-light w-100 sidebar-toggle">
-                <i class="bi bi-chevron-left"></i>
+
+        {{-- LOGOUT BUTTON --}}
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button class="btn btn-danger w-100 mb-2">
+                <i class="bi bi-box-arrow-right"></i> Logout
             </button>
-        </div>
+        </form>
+
+        {{-- COLLAPSE BUTTON --}}
+        <button class="btn btn-outline-light w-100 sidebar-toggle">
+            <i class="bi bi-chevron-left"></i>
+        </button>
     </div>
 
-    {{-- CONTENT --}}
+    {{-- CONTENT AREA --}}
     <div id="content">
         @yield('content')
     </div>
 
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.querySelector('.sidebar-toggle');
 
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
-            // optional icon rotate
             toggleBtn.querySelector('i').classList.toggle('bi-chevron-right');
         });
     </script>
 
     @yield('scripts')
+
 </body>
 </html>

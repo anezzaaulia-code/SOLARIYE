@@ -12,19 +12,19 @@ class MenuController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth','role:admin']);
+        $this->middleware(['admin']);
     }
 
     public function index()
     {
         $menus = Menu::with('kategori')->orderBy('nama')->paginate(20);
-        return view('menu.index', compact('menus'));
+        return view('admin.menu.index', compact('menus'));
     }
 
     public function create()
     {
         $kategories = KategoriMenu::where('status','aktif')->orderBy('nama')->get();
-        return view('menu.create', compact('kategories'));
+        return view('admin.menu.create', compact('kategories'));
     }
 
     public function store(Request $request)
@@ -46,13 +46,13 @@ class MenuController extends Controller
 
         Menu::create($data);
 
-        return redirect()->route('menu.index')->with('success','Menu dibuat.');
+        return redirect()->route('admin.menu.index')->with('success','Menu dibuat.');
     }
 
     public function edit(Menu $menu)
     {
         $kategories = KategoriMenu::where('status','aktif')->orderBy('nama')->get();
-        return view('menu.edit', compact('menu','kategories'));
+        return view('admin.menu.edit', compact('menu','kategories'));
     }
 
     public function update(Request $request, Menu $menu)
@@ -73,7 +73,7 @@ class MenuController extends Controller
 
         $menu->update($data);
 
-        return redirect()->route('menu.index')->with('success','Menu diupdate.');
+        return redirect()->route('admin.menu.index')->with('success','Menu diupdate.');
     }
 
     public function destroy(Menu $menu)

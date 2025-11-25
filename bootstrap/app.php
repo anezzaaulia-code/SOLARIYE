@@ -15,10 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Daftarkan role sebagai alias middleware, BUKAN add()
         $middleware->alias([
-            // 'role' => RoleMiddleware::class,
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-            'admin' => \App\Http\Middleware\Admin::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'kasir' => \App\Http\Middleware\KasirMiddleware::class,
+            
         ]);
 
         // Jika ada middleware global:

@@ -81,17 +81,45 @@
                     <span class="link-text">Supplier</span>
                 </a>
             </li>
-            <li>
-                <a href="{{ route('pesanan.index') }}" class="nav-link text-white">
-                    <i class="bi bi-cart-check"></i>
-                    <span class="link-text">Pesanan</span>
+            <li class="nav-item">
+                <a class="nav-link text-white d-flex justify-content-between align-items-center" 
+                data-bs-toggle="collapse" 
+                href="#submenuKeuangan" 
+                role="button" 
+                aria-expanded="false" 
+                aria-controls="submenuKeuangan">
+                    <div>
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="link-text">Keuangan</span>
+                    </div>
+                    <i class="bi bi-chevron-down"></i>
                 </a>
-            </li>
-            <li>
-                <a href="{{ route('keuangan.index') }}" class="nav-link text-white">
-                    <i class="bi bi-cash-stack"></i>
-                    <span class="link-text">Keuangan</span>
-                </a>
+
+                <div class="collapse ms-4" id="submenuKeuangan">
+                    <ul class="nav flex-column">
+
+                        <li>
+                            <a href="{{ route('pendapatan.index') }}" class="nav-link text-white">
+                                <i class="bi bi-coin"></i>
+                                Pendapatan
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('pengeluaran.index') }}" class="nav-link text-white">
+                                <i class="bi bi-receipt-cutoff"></i>
+                                Pengeluaran
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('keuangan.laporan') }}" class="nav-link text-white">
+                                <i class="bi bi-bar-chart"></i>
+                                Laporan Keuangan
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li>
                 <a href="{{ route('users.index') }}" class="nav-link text-white">

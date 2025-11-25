@@ -74,3 +74,18 @@ Route::post('/logout', function () {
     Auth::logout();
     return redirect('/login');
 })->name('logout');
+
+Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
+Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
+Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
+Route::get('/admin/keuangan/laporan', [KeuanganController::class, 'laporan'])
+    ->name('keuangan.laporan');
+Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
+    ->name('keuangan.pengeluaran');
+
+    // EXPORT PENGELUARAN
+Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])
+    ->name('keuangan.exportPengeluaran')
+    ->middleware('admin');
+
+

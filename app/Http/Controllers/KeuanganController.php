@@ -12,13 +12,56 @@ class KeuanganController extends Controller
         $this->middleware(['admin']);
     }
 
-    public function index(Request $request)
+    // ===========================
+    // HALAMAN UTAMA KEUANGAN
+    // ===========================
+    public function index()
     {
-        $q = Keuangan::query();
+        return view('admin.keuangan.index');
+    }
 
-        if ($request->filled('jenis')) {
-            $q->where('jenis', $request->jenis);
+    // ===========================
+    // PENDAPATAN
+    // ===========================
+    public function pendapatan(Request $request)
+    {
+        $q = Keuangan::where('jenis', 'pemasukan');
+
+        if ($request->filled('from')) {
+            $q->whereDate('tanggal', '>=', $request->from);
         }
+        if ($request->filled('to')) {
+            $q->whereDate('tanggal', '<=', $request->to);
+        }
+
+        $data = $q->orderBy('tanggal', 'desc')->paginate(25);
+
+        // Hitungan tambahan
+        $pendapatanHariIni = Keuangan::where('jenis','pemasukan')
+            ->whereDate('tanggal', today())
+            ->sum('nominal');
+
+        $pendapatanMinggu = Keuangan::where('jenis','pemasukan')
+            ->whereBetween('tanggal', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('nominal');
+
+        $totalPendapatan = $q->sum('nominal');
+
+        return view('admin.keuangan.pendapatan', compact(
+            'data',
+            'pendapatanHariIni',
+            'pendapatanMinggu',
+            'totalPendapatan'
+        ));
+    }
+
+
+    // ===========================
+    // PENGELUARAN
+    // ===========================
+    public function pengeluaran(Request $request)
+    {
+        $q = Keuangan::where('jenis', 'pengeluaran');
 
         if ($request->filled('sumber')) {
             $q->where('sumber', $request->sumber);
@@ -31,30 +74,97 @@ class KeuanganController extends Controller
             $q->whereDate('tanggal', '<=', $request->to);
         }
 
-        $keuangan = $q->orderBy('tanggal','desc')->paginate(30);
-        return view('keuangan.index', compact('keuangan'));
+        $pengeluaran = $q->orderBy('tanggal','desc')->paginate(20);
+
+        
+    // HITUNG TOTAL PENGELUARAN
+    $totalPengeluaran = $q->sum('nominal');
+
+    return view('admin.keuangan.pengeluaran', compact('pengeluaran','totalPengeluaran'));
     }
 
+
+    // ===========================
+    // LAPORAN KEUANGAN (HARIAN / BULANAN)
+    // ===========================
+    public function laporan(Request $request)
+    {
+        $from = $request->from ?? now()->startOfMonth()->toDateString();
+        $to = $request->to ?? now()->endOfMonth()->toDateString();
+
+        $pendapatan = Keuangan::where('jenis','pemasukan')
+            ->whereBetween('tanggal',[$from,$to])
+            ->sum('nominal');
+
+        $pengeluaran = Keuangan::where('jenis','pengeluaran')
+            ->whereBetween('tanggal',[$from,$to])
+            ->sum('nominal');
+
+        $list = Keuangan::whereBetween('tanggal',[$from,$to])
+            ->orderBy('tanggal','desc')
+            ->get();
+
+        return view('admin.keuangan.laporan', compact(
+            'from','to','pendapatan','pengeluaran','list'
+        ));
+    }
+
+
+    // ===========================
+    // DETAIL CATATAN
+    // ===========================
     public function show(Keuangan $keuangan)
     {
-        return view('keuangan.show', compact('keuangan'));
+        return view('admin.keuangan.show', compact('keuangan'));
     }
 
+    // ===========================
+    // DELETE
+    // ===========================
     public function destroy(Keuangan $keuangan)
     {
         $keuangan->delete();
-        return back()->with('success','Catatan keuangan dihapus.');
+        return back()->with('success', 'Catatan keuangan dihapus.');
     }
 
-    // helper: laba rugi
+    // ===========================
+    // LAPORAN LABA RUGI
+    // ===========================
     public function labaRugi(Request $request)
     {
         $from = $request->from ?? now()->startOfMonth()->toDateString();
         $to = $request->to ?? now()->toDateString();
 
-        $pemasukan = Keuangan::where('jenis','pemasukan')->whereBetween('tanggal',[$from,$to])->sum('nominal');
-        $pengeluaran = Keuangan::where('jenis','pengeluaran')->whereBetween('tanggal',[$from,$to])->sum('nominal');
+        $pemasukan = Keuangan::where('jenis', 'pemasukan')
+            ->whereBetween('tanggal', [$from, $to])
+            ->sum('nominal');
 
-        return view('keuangan.labarugi', compact('from','to','pemasukan','pengeluaran'));
+        $pengeluaran = Keuangan::where('jenis', 'pengeluaran')
+            ->whereBetween('tanggal', [$from, $to])
+            ->sum('nominal');
+
+        return view('admin.keuangan.labarugi', compact(
+            'from', 'to', 'pemasukan', 'pengeluaran'
+        ));
+        
     }
+    public function exportPengeluaran(Request $request)
+    {
+        $q = Keuangan::where('jenis', 'pengeluaran');
+
+        if ($request->filled('from')) {
+            $q->whereDate('tanggal', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $q->whereDate('tanggal', '<=', $request->to);
+        }
+
+        $data = $q->orderBy('tanggal','desc')->get();
+
+        return response()->json([
+            'status' => 'ok',
+            'exported' => $data
+        ]);
+    }
+
 }

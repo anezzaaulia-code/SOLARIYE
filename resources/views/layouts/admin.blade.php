@@ -3,113 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-
-    {{-- Bootstrap 5 --}}
+    <title>Admin Dashboard - SOLARIYE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    {{-- Icons --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-    {{-- Custom CSS --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { background: #f4f6f9; }
-
-        .sidebar {
-            width: 250px;
-            height: 100vh;
+        body {
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+        #sidebar {
+            min-width: 250px;
+            max-width: 250px;
             background: #343a40;
-            position: fixed;
-            top: 0;
-            left: 0;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        #sidebar.collapsed {
+            min-width: 80px;
+            max-width: 80px;
+        }
+        #sidebar .nav-link {
             color: #fff;
         }
-
-        .sidebar .menu a {
-            color: #adb5bd;
-            text-decoration: none;
-            padding: 12px 20px;
-            display: block;
-        }
-        .sidebar .menu a:hover, .sidebar .menu .active {
+        #sidebar .nav-link:hover {
             background: #495057;
-            color: #fff;
         }
-
-        .content {
-            margin-left: 250px;
-            padding: 25px;
+        #sidebar .nav-link i {
+            margin-right: 10px;
         }
-
-        .topbar {
-            background: #6f42c1;
-            padding: 15px;
-            color: #fff;
-            margin-left: 250px;
-        }
-
-        .card-stats {
+        #content {
+            flex: 1;
             padding: 20px;
-            border-radius: 8px;
-            color: #fff;
+            background: #f8f9fa;
+        }
+        .sidebar-toggle {
+            cursor: pointer;
         }
     </style>
 </head>
-
 <body>
 
     {{-- SIDEBAR --}}
-    <div class="sidebar">
-        <div class="p-3 border-bottom">
-            <h4 class="text-white">Admin Panel</h4>
+    <div id="sidebar" class="d-flex flex-column p-3">
+        <a href="{{ route('dashboard') }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+            <i class="bi bi-speedometer2 fs-3"></i>
+            <span class="fs-5 fw-bold">SOLARIYE</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-link text-white">
+                    <i class="bi bi-house-door"></i>
+                    <span class="link-text">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('pembelian.index') }}" class="nav-link text-white">
+                    <i class="bi bi-box-seam"></i>
+                    <span class="link-text">Bahan Baku</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('menu.index') }}" class="nav-link text-white">
+                    <i class="bi bi-list-ul"></i>
+                    <span class="link-text">Menu</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('supplier.index') }}" class="nav-link text-white">
+                    <i class="bi bi-truck"></i>
+                    <span class="link-text">Supplier</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('pesanan.index') }}" class="nav-link text-white">
+                    <i class="bi bi-cart-check"></i>
+                    <span class="link-text">Pesanan</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('keuangan.index') }}" class="nav-link text-white">
+                    <i class="bi bi-cash-stack"></i>
+                    <span class="link-text">Keuangan</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('users.index') }}" class="nav-link text-white">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Users</span>
+                </a>
+            </li>
+        </ul>
+        <hr>
+        <div>
+            <button class="btn btn-outline-light w-100 sidebar-toggle">
+                <i class="bi bi-chevron-left"></i>
+            </button>
         </div>
-
-        <div class="menu mt-3">
-            <a href="#" class="active"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-            <a href="#"><i class="bi bi-basket me-2"></i> Menu</a>
-            <a href="#"><i class="bi bi-box-seam me-2"></i> Bahan Baku</a>
-            <a href="#"><i class="bi bi-truck me-2"></i> Supplier</a>
-            <a href="#"><i class="bi bi-receipt me-2"></i> Pembelian</a>
-            <a href="#"><i class="bi bi-cash-coin me-2"></i> Keuangan</a>
-            <a href="#"><i class="bi bi-people me-2"></i> Users</a>
-        </div>
-    </div>
-
-    {{-- TOPBAR --}}
-    <div class="topbar d-flex justify-content-between align-items-center">
-
-        <span class="fw-bold fs-5">Dashboard</span>
-
-        <div class="d-flex align-items-center">
-
-            <i class="bi bi-bell me-3 fs-5"></i>
-
-            <span class="me-2">admin</span>
-
-            <img src="https://i.pravatar.cc/40" class="rounded-circle me-3" width="35">
-
-            {{-- 🔴 TOMBOL LOGOUT --}}
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-            </form>
-
-        </div>
-
     </div>
 
     {{-- CONTENT --}}
-    <div class="content">
+    <div id="content">
         @yield('content')
     </div>
 
-    {{-- JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.querySelector('.sidebar-toggle');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // optional icon rotate
+            toggleBtn.querySelector('i').classList.toggle('bi-chevron-right');
+        });
+    </script>
 
     @yield('scripts')
-
 </body>
 </html>

@@ -14,6 +14,8 @@ use App\Http\Controllers\StokHarianController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\KasirMiddleware;
 
 // Root
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -24,7 +26,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin Only
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::resource('users', UserController::class);
     Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::get('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
@@ -39,7 +41,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 // Kasir Only
-Route::middleware(['auth', 'kasir'])->group(function () {
+Route::middleware(['auth', KasirMiddleware::class])->group(function () {
     Route::get('pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('pos', [POSController::class, 'store'])->name('pos.store');
 });

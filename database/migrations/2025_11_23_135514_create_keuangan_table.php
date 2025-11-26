@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->enum('jenis', ['pemasukan','pengeluaran']);
 
             // sumber transaksi
-            $table->enum('sumber', ['penjualan','supplier','lainnya']);
+            $table->enum('sumber', ['penjualan','suppliers','lainnya']);
 
             // nominal uang
             $table->bigInteger('nominal');

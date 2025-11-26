@@ -6,19 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::create('supplier', function (Blueprint $table) {
+        Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('nama_supplier');
             $table->string('kontak')->nullable();
             $table->string('email')->nullable();
             $table->text('alamat')->nullable();
-            $table->string('jenis_barang')->nullable(); // tambahan
+            $table->string('jenis_barang')->nullable();
             $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void {
-        Schema::dropIfExists('supplier');
+        Schema::dropIfExists('suppliers');
     }
 };

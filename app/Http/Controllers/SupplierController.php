@@ -15,7 +15,7 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = Supplier::orderBy('nama_supplier')->paginate(20);
-        return view('supplier.index', compact('suppliers'));
+        return view('supplier.index', compact('suppliers')); // folder view bisa tetap singular 'supplier'
     }
 
     public function create()

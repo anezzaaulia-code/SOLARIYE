@@ -19,16 +19,19 @@ class PembelianBahan extends Model
         'created_by',
     ];
 
+    // Relasi ke Supplier
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
-    public function detail()
+    // Relasi ke detail pembelian
+    public function detailPembelian()
     {
-        return $this->hasMany(DetailPembelianBahan::class, 'pembelian_id');
+        return $this->hasMany(DetailPembelianBahan::class, 'pembelian_bahan_id');
     }
 
+    // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');

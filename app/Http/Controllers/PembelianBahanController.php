@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\PembelianBahan;
 use App\Models\Supplier;
+use App\Models\DetailPembelianBahan;
+use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,103 +13,126 @@ class PembelianBahanController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth'); // Pastikan user login
+        $this->middleware('auth');
     }
 
-    // -------------------------
-    // List semua pembelian
-    // -------------------------
     public function index()
     {
-        $pembelian = PembelianBahan::with('supplier')->orderBy('tanggal','desc')->get();
+        $pembelian = PembelianBahan::with('supplier')->orderBy('tanggal', 'desc')->get();
         return view('pembelian.index', compact('pembelian'));
     }
 
-    // -------------------------
-    // Form tambah pembelian baru
-    // -------------------------
     public function create()
     {
         $suppliers = Supplier::all();
-        return view('pembelian.create', compact('suppliers'));
+        $bahan = BahanBaku::all();
+        return view('pembelian.create', compact('suppliers', 'bahan'));
     }
 
-    // -------------------------
-    // Simpan pembelian baru
-    // -------------------------
     public function store(Request $request)
     {
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
+            'bahan_id.*' => 'required|exists:bahan_baku,id',
+            'jumlah.*' => 'required|numeric|min:1',
+            'harga_satuan.*' => 'required|numeric|min:0',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request) {
             $pembelian = PembelianBahan::create([
                 'supplier_id' => $request->supplier_id,
                 'tanggal' => $request->tanggal,
-                'total_harga' => 0, // nanti diupdate lewat detail
+                'total_harga' => 0,
             ]);
 
-            return redirect()->route('pembelian.show', $pembelian->id)
-                ->with('success', 'Pembelian berhasil dibuat, silakan tambah detail.');
+            $total = 0;
+            foreach ($request->bahan_id as $i => $bahanId) {
+                $jumlah = $request->jumlah[$i];
+                $harga = $request->harga_satuan[$i];
+                $subTotal = $jumlah * $harga;
+
+                DetailPembelianBahan::create([
+                    'pembelian_bahan_id' => $pembelian->id,
+                    'bahan_id' => $bahanId,
+                    'jumlah' => $jumlah,
+                    'harga_satuan' => $harga,
+                    'total_harga' => $subTotal,
+                ]);
+
+                $total += $subTotal;
+            }
+
+            $pembelian->update(['total_harga' => $total]);
         });
+
+        return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil dibuat.');
     }
 
-    // -------------------------
-    // Tampilkan detail pembelian
-    // -------------------------
-    public function show(PembelianBahan $pembelian)
+    public function show($id)
     {
-        $pembelian->load('supplier', 'detailPembelian'); // relasi detail
+        $pembelian = PembelianBahan::with(['supplier', 'detailPembelian.bahan'])->findOrFail($id);
         return view('pembelian.show', compact('pembelian'));
     }
 
-    // -------------------------
-    // Form edit pembelian
-    // -------------------------
     public function edit(PembelianBahan $pembelian)
     {
         $suppliers = Supplier::all();
-        return view('pembelian.edit', compact('pembelian', 'suppliers'));
+        $bahan = BahanBaku::all();
+        $detail = $pembelian->detailPembelian;
+        return view('pembelian.edit', compact('pembelian', 'suppliers', 'bahan', 'detail'));
     }
 
-    // -------------------------
-    // Update pembelian
-    // -------------------------
     public function update(Request $request, PembelianBahan $pembelian)
     {
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'tanggal' => 'required|date',
+            'bahan_id.*' => 'required|exists:bahan_baku,id',
+            'jumlah.*' => 'required|numeric|min:1',
+            'harga_satuan.*' => 'required|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request, $pembelian) {
             $pembelian->update([
                 'supplier_id' => $request->supplier_id,
                 'tanggal' => $request->tanggal,
-                // total_harga tetap diupdate lewat detail jika ada
             ]);
+
+            // Hapus detail lama
+            $pembelian->detailPembelian()->delete();
+
+            // Tambah detail baru
+            $total = 0;
+            foreach ($request->bahan_id as $i => $bahanId) {
+                $jumlah = $request->jumlah[$i];
+                $harga = $request->harga_satuan[$i];
+                $subTotal = $jumlah * $harga;
+
+                DetailPembelianBahan::create([
+                    'pembelian_bahan_id' => $pembelian->id,
+                    'bahan_id' => $bahanId,
+                    'jumlah' => $jumlah,
+                    'harga_satuan' => $harga,
+                    'total_harga' => $subTotal,
+                ]);
+
+                $total += $subTotal;
+            }
+
+            $pembelian->update(['total_harga' => $total]);
         });
 
-        return redirect()->route('pembelian.index')
-            ->with('success', 'Pembelian berhasil diupdate.');
+        return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil diupdate.');
     }
 
-    // -------------------------
-    // Hapus pembelian
-    // -------------------------
     public function destroy(PembelianBahan $pembelian)
     {
         DB::transaction(function () use ($pembelian) {
-            // hapus detail dulu kalau ada relasi
-            if($pembelian->detailPembelian()->count() > 0){
-                $pembelian->detailPembelian()->delete();
-            }
+            $pembelian->detailPembelian()->delete();
             $pembelian->delete();
         });
 
-        return redirect()->route('pembelian.index')
-            ->with('success', 'Pembelian berhasil dihapus.');
+        return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil dihapus.');
     }
 }

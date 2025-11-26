@@ -11,11 +11,11 @@ return new class extends Migration {
             $table->string('nama_bahan');
             $table->string('satuan', 50);
 
-            // stok harian & pengurangan stok
+            // stok harian
             $table->integer('stok_awal')->default(0);
             $table->integer('stok_akhir')->default(0);
 
-            // klasifikasi warna
+            // indikator warna
             $table->enum('status_warna', ['hijau','kuning','merah'])->default('hijau');
 
             // batas indikator

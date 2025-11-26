@@ -10,24 +10,17 @@ class DetailPembelianBahan extends Model
     use HasFactory;
 
     protected $table = 'detail_pembelian_bahan';
-
-    // jika migration menggunakan $table->id('detail_id'), keep primaryKey:
-    protected $primaryKey = 'detail_id';
-
-    public $incrementing = true;
-    protected $keyType = 'int';
-
     protected $fillable = [
-        'pembelian_id',
+        'pembelian_bahan_id',
         'bahan_id',
         'jumlah',
         'harga_satuan',
-        'subtotal',
+        'total_harga'
     ];
 
     public function pembelian()
     {
-        return $this->belongsTo(PembelianBahan::class, 'pembelian_id');
+        return $this->belongsTo(PembelianBahan::class, 'pembelian_bahan_id');
     }
 
     public function bahan()

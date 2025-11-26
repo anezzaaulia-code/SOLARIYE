@@ -40,13 +40,13 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($pembelian->detail as $idx => $det)
+            @foreach($pembelian->detailPembelian as $idx => $det)
             <tr>
                 <td>{{ $idx + 1 }}</td>
                 <td>{{ $det->bahan->nama_bahan ?? '-' }}</td>
                 <td>{{ $det->jumlah }}</td>
                 <td>{{ number_format($det->harga_satuan,0,',','.') }}</td>
-                <td>{{ number_format($det->subtotal,0,',','.') }}</td>
+                <td>{{ number_format($det->total_harga,0,',','.') }}</td>
             </tr>
             @endforeach
         </tbody>

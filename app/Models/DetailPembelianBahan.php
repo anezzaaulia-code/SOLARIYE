@@ -13,7 +13,7 @@ class DetailPembelianBahan extends Model
     protected $fillable = [
         'pembelian_bahan_id',
         'bahan_id',
-        'jumlah',
+        'qty',
         'harga_satuan',
         'total_harga'
     ];

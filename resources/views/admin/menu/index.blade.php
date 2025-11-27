@@ -9,6 +9,10 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
     <div class="card p-3">
         <table class="table table-bordered align-middle">
             <thead class="table-dark">
@@ -25,47 +29,40 @@
             <tbody>
                 @foreach($menus as $m)
                 <tr>
-                    <td>{{ $loop->iteration }}</td>
-
+                    <td>{{ $loop->iteration + ($menus->currentPage()-1)*$menus->perPage() }}</td>
                     <td>
                         @if($m->foto)
-                            <img src="{{ asset('uploads/menu/'.$m->foto) }}" width="60" class="rounded">
+                            <img src="{{ asset('storage/'.$m->foto) }}" width="60" class="rounded">
                         @else
                             <span class="text-muted">-</span>
                         @endif
                     </td>
-
                     <td>{{ $m->nama }}</td>
-                    <td>{{ $m->kategori->nama }}</td>
+                    <td>{{ $m->kategori->nama ?? '-' }}</td>
                     <td>Rp {{ number_format($m->harga, 0, ',', '.') }}</td>
-
                     <td>
-                        <span class="badge bg-{{ $m->status == 'aktif' ? 'success' : 'secondary'}}">
+                        <span class="badge
+                            bg-{{ $m->status == 'tersedia' ? 'success' : ($m->status == 'habis' ? 'danger' : 'secondary') }}">
                             {{ ucfirst($m->status) }}
                         </span>
                     </td>
-
                     <td>
                         <a href="{{ route('menu.edit', $m->id) }}" class="btn btn-warning btn-sm">
                             <i class="bi bi-pencil"></i>
                         </a>
-
                         <form action="{{ route('menu.destroy', $m->id) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button onclick="return confirm('Hapus menu ini?')" 
+                            <button onclick="return confirm('Hapus menu ini?')"
                                     class="btn btn-danger btn-sm">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
-
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-
         {{ $menus->links() }}
-
     </div>
 </div>
 @endsection

@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('bahan_id')->constrained('bahan_baku')->cascadeOnDelete();
             $table->integer('qty');
             $table->bigInteger('harga_satuan');
-            $table->bigInteger('subtotal');
+            $table->bigInteger('subtotal')->default(0);
             $table->timestamps();
         });
     }

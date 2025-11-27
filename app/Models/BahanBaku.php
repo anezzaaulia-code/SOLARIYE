@@ -22,7 +22,7 @@ class BahanBaku extends Model
     ];
 
     // Accessor otomatis untuk status warna
-    public function getStatusWarnaAttribute($value)
+    public function getStatusWarnaAttribute()
     {
         if ($this->stok_akhir <= $this->batas_merah) {
             return 'merah';

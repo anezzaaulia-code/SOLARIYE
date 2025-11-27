@@ -34,19 +34,33 @@
             <tr>
                 <th>#</th>
                 <th>Bahan</th>
-                <th>Jumlah</th>
+                <th>Qty</th>
                 <th>Harga Satuan</th>
                 <th>Subtotal</th>
+                <th>Stok Saat Ini</th>
             </tr>
         </thead>
         <tbody>
             @foreach($pembelian->detailPembelian as $idx => $det)
+                @php
+                    // Ambil stok bahan dari model BahanBaku
+                    $stok = $det->bahan->stok ?? 0;
+                    // Warna stok berdasarkan kondisi
+                    if($stok <= 5) { // misal <= 5 = merah
+                        $warna = 'bg-danger text-white';
+                    } elseif($stok <= 10) { // <=10 = kuning
+                        $warna = 'bg-warning';
+                    } else {
+                        $warna = 'bg-success text-white';
+                    }
+                @endphp
             <tr>
                 <td>{{ $idx + 1 }}</td>
                 <td>{{ $det->bahan->nama_bahan ?? '-' }}</td>
                 <td>{{ $det->jumlah }}</td>
                 <td>{{ number_format($det->harga_satuan,0,',','.') }}</td>
                 <td>{{ number_format($det->total_harga,0,',','.') }}</td>
+                <td class="{{ $warna }}">{{ $stok }}</td>
             </tr>
             @endforeach
         </tbody>

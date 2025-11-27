@@ -45,7 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('pembelian', PembelianBahanController::class);
     Route::resource('pembelian-detail', DetailPembelianBahanController::class);
     Route::resource('stok', StokHarianController::class);
-    Route::resource('keuangan', KeuanganController::class);
+//     Route::resource('keuangan', KeuanganController::class);
 });
 
 

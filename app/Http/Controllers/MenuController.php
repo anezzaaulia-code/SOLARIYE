@@ -6,7 +6,6 @@ use App\Models\Menu;
 use App\Models\KategoriMenu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
 {
@@ -46,7 +45,7 @@ class MenuController extends Controller
 
         Menu::create($data);
 
-        return redirect()->route('admin.menu.index')->with('success','Menu dibuat.');
+        return redirect()->route('menu.index')->with('success','Menu dibuat.');
     }
 
     public function edit(Menu $menu)
@@ -73,7 +72,7 @@ class MenuController extends Controller
 
         $menu->update($data);
 
-        return redirect()->route('admin.menu.index')->with('success','Menu diupdate.');
+        return redirect()->route('menu.index')->with('success','Menu diupdate.');
     }
 
     public function destroy(Menu $menu)

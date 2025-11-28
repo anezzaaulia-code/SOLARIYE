@@ -4,7 +4,7 @@
 <div class="flex h-screen bg-gray-100">
 
     {{-- ===========================
-        SIDEBAR ATAS – LOGOUT
+        LOGOUT RIGHT TOP
     ============================ --}}
     <div class="absolute top-3 right-5 flex items-center gap-3">
         <span class="font-semibold text-gray-700">
@@ -21,47 +21,56 @@
 
 
     {{-- ===========================
-        PRODUK (KIRI)
+        SIDEBAR PRODUK (KIRI)
     ============================ --}}
-    <div class="w-2/3 p-6 overflow-y-scroll">
-        
+    <div class="w-3/12 bg-white p-5 overflow-y-scroll border-r">
+
         {{-- Search --}}
-        <div class="mb-4">
-            <input type="text" placeholder="Cari..." 
-                   class="w-full border rounded-xl p-3 shadow-sm focus:ring focus:ring-blue-200">
-        </div>
+        <input type="text" placeholder="Cari menu..." id="searchMenu"
+               class="w-full border rounded-xl p-3 shadow-sm mb-4 focus:ring focus:ring-blue-200">
 
-        {{-- Grid Produk --}}
-        <div class="grid grid-cols-4 gap-5">
+        <h2 class="font-bold text-lg mb-3">Daftar Produk</h2>
+
+        {{-- LIST PRODUK VERTIKAL --}}
+        <div id="productList">
             @foreach ($products as $p)
-            <div class="border rounded-xl bg-white p-4 shadow hover:shadow-lg transition">
-                <img src="{{ asset('storage/' . $p->gambar) }}" 
-                     class="w-full h-28 object-contain mb-3">
+            <div onclick="addToCart({{ $p->id }})"
+                 class="flex items-center gap-3 mb-3 p-2 rounded-xl border cursor-pointer hover:bg-blue-50 transition">
 
-                <p class="font-semibold text-sm">{{ $p->nama }}</p>
-                <p class="text-blue-600 font-bold mt-1">Rp {{ number_format($p->harga) }}</p>
+                <img src="{{ asset('storage/' . $p->gambar) }}"
+                     class="w-14 h-14 object-cover rounded">
 
-                <button onclick="addToCart({{ $p->id }})"
-                        class="w-full bg-blue-500 text-white mt-3 py-2 rounded-lg hover:bg-blue-600">
-                    + Tambah
-                </button>
+                <div>
+                    <p class="font-semibold text-sm">{{ $p->nama }}</p>
+                    <p class="text-blue-600 font-bold text-xs">Rp {{ number_format($p->harga) }}</p>
+                </div>
             </div>
             @endforeach
         </div>
 
         {{-- Pagination --}}
-        <div class="mt-5">
+        <div class="mt-4">
             {{ $products->links() }}
         </div>
     </div>
 
 
     {{-- ===========================
-        KERANJANG (KANAN)
+        TENGAH — INFORMASI
     ============================ --}}
-    <div class="w-1/3 bg-white shadow-xl p-6 overflow-y-scroll">
+    <div class="w-5/12 flex items-center justify-center text-gray-400">
+        <div class="text-center">
+            <img src="/img/pos.png" class="w-48 mx-auto opacity-50">
+            <p class="text-lg mt-4 font-semibold">Pilih menu di sebelah kiri untuk menambahkan ke keranjang.</p>
+        </div>
+    </div>
 
-        {{-- Judul --}}
+
+    {{-- ===========================
+        KERANJANG KANAN
+    ============================ --}}
+    <div class="w-4/12 bg-white shadow-xl p-6 overflow-y-scroll">
+
         <h2 class="font-bold text-xl mb-5 flex items-center gap-2">
             <i class="bi bi-person"></i> Umum
         </h2>
@@ -70,7 +79,7 @@
         <div id="cart-items">
             @foreach ($cart as $item)
             <div class="border-b pb-3 mb-4">
-                
+
                 <p class="font-semibold">{{ $item->product->nama }}</p>
                 <p class="text-gray-600">
                     Rp {{ number_format($item->product->harga) }}
@@ -78,12 +87,12 @@
                 </p>
 
                 <div class="flex items-center gap-2 mt-2">
-                    <button onclick="updateQty({{ $item->id }}, 'minus')" 
+                    <button onclick="updateQty({{ $item->id }}, 'minus')"
                             class="px-3 py-1 bg-gray-200 rounded-lg">-</button>
 
                     <p class="w-8 text-center font-semibold">{{ $item->qty }}</p>
 
-                    <button onclick="updateQty({{ $item->id }}, 'plus')" 
+                    <button onclick="updateQty({{ $item->id }}, 'plus')"
                             class="px-3 py-1 bg-purple-500 text-white rounded-lg">+</button>
 
                     <div class="ml-auto font-bold text-purple-600">
@@ -100,7 +109,7 @@
 
 
         {{-- ===========================
-            RINGKASAN TOTAL
+            RINGKASAN
         ============================ --}}
         <div class="mt-5 border-t pt-4">
             <div class="flex justify-between mb-1">
@@ -122,7 +131,6 @@
             </div>
         </div>
 
-        {{-- Tombol Bayar --}}
         <button class="w-full bg-green-500 text-white text-lg font-bold mt-6 py-4 rounded-xl hover:bg-green-600">
             Bayar Rp {{ number_format($total) }}
         </button>
@@ -136,14 +144,11 @@
 =========================== --}}
 <script>
     function addToCart(id) {
-        fetch(`/kasir/add/${id}`)
-            .then(res => location.reload());
+        fetch(`/kasir/add/${id}`).then(() => location.reload());
     }
 
     function updateQty(id, type) {
-        fetch(`/kasir/qty/${id}/${type}`)
-            .then(res => location.reload());
+        fetch(`/kasir/qty/${id}/${type}`).then(() => location.reload());
     }
 </script>
-
 @endsection

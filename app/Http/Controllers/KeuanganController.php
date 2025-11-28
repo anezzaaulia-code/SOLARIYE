@@ -18,6 +18,14 @@ class KeuanganController extends Controller
         return view('admin.keuangan.index');
     }
 
+    public function create(Request $request)
+    {
+    // jenis bisa: pemasukan / pengeluaran
+    $jenis = $request->jenis ?? null;
+
+    return view('admin.keuangan.create', compact('jenis'));
+    }
+
     // PENDAPATAN
     public function pendapatan(Request $request)
     {

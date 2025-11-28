@@ -82,6 +82,9 @@ Route::get('/admin/keuangan/laporan', [KeuanganController::class, 'laporan'])
     ->name('keuangan.laporan');
 Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
     ->name('keuangan.pengeluaran');
+Route::get('/keuangan/create', [KeuanganController::class, 'create'])
+    ->name('keuangan.create')
+    ->middleware('admin');
 
     // EXPORT PENGELUARAN
 Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])

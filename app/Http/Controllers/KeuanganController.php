@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers;
 
@@ -16,6 +16,40 @@ class KeuanganController extends Controller
     public function index()
     {
         return view('admin.keuangan.index');
+    }
+
+    // FORM INPUT
+    public function create(Request $request)
+    {
+        // jenis bisa: pemasukan / pengeluaran
+        $jenis = $request->jenis ?? null;
+
+        return view('admin.keuangan.create', compact('jenis'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'jenis' => 'required|in:pemasukan,pengeluaran',
+            'tanggal' => 'required|date',
+            'nominal' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'sumber' => 'nullable|string',
+        ]);
+
+        Keuangan::create([
+            'jenis' => $request->jenis,
+            'tanggal' => $request->tanggal,
+            'nominal' => $request->nominal,
+            'keterangan' => $request->keterangan,
+            'sumber' => $request->sumber,
+        ]);
+
+        return redirect()->route(
+            $request->jenis === 'pengeluaran' 
+                ? 'pengeluaran.index' 
+                : 'pendapatan.index'
+        )->with('success', 'Data keuangan berhasil ditambahkan.');
     }
 
     // PENDAPATAN

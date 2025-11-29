@@ -50,11 +50,9 @@
             {{-- Foto Menu --}}
             <div class="col-md-6 mb-3">
                 <label class="form-label">Foto Menu</label>
-                @if($menu->foto)
-                    <div class="mb-2">
-                        <img src="{{ asset('storage/'.$menu->foto) }}" width="100" class="rounded">
-                    </div>
-                @endif
+                    @if($menu->foto)
+                        <img src="{{ asset('storage/'.$menu->foto) }}" alt="Foto" width="80">
+                    @endif
                 <input type="file" name="foto" class="form-control" accept="image/*">
                 @error('foto')
                     <small class="text-danger">{{ $message }}</small>

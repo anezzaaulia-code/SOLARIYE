@@ -64,7 +64,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('pembelian.index') }}" class="nav-link text-white">
+                <a href="{{ route('bahanbaku.index') }}" class="nav-link text-white">
                     <i class="bi bi-box-seam"></i>
                     <span class="link-text">Bahan Baku</span>
                 </a>
@@ -79,6 +79,20 @@
                 <a href="{{ route('supplier.index') }}" class="nav-link text-white">
                     <i class="bi bi-truck"></i>
                     <span class="link-text">Supplier</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('stokharian.index') }}" class="nav-link text-white">
+                    <i class="bi bi-calendar-check"></i>
+                    <span class="link-text">Stok Harian</span>
+                </a>
+            </li>
+
+            <!-- 📌 MENU BARU: Pembelian Bahan -->
+            <li>
+                <a href="{{ route('pembelian.index') }}" class="nav-link text-white">
+                    <i class="bi bi-cart-plus"></i>
+                    <span class="link-text">Pembelian Bahan</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -99,14 +113,14 @@
                     <ul class="nav flex-column">
 
                         <li>
-                            <a href="{{ route('pendapatan.index') }}" class="nav-link text-white">
+                            <a href="{{ route('pendapatan') }}" class="nav-link text-white">
                                 <i class="bi bi-coin"></i>
                                 Pendapatan
                             </a>
                         </li>
 
                         <li>
-                            <a href="{{ route('pengeluaran.index') }}" class="nav-link text-white">
+                            <a href="{{ route('pengeluaran') }}" class="nav-link text-white">
                                 <i class="bi bi-receipt-cutoff"></i>
                                 Pengeluaran
                             </a>

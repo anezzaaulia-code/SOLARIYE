@@ -1,10 +1,9 @@
 @extends('layouts.kasir')
 
 @section('content')
-<div class="flex h-screen overflow-hidden">
 
-    {{-- SIDEBAR MENU --}}
-    <div class="w-8/12 p-4 overflow-y-auto bg-gray-100">
+    {{-- SIDEBAR KIRI (MENU) --}}
+    <div class="w-8/12 p-4 overflow-y-scroll bg-gray-100">
 
         <input type="text" id="searchMenu" class="w-full p-2 mb-4 border rounded"
             placeholder="Cari menu...">
@@ -16,20 +15,18 @@
                 data-name="{{ $menu->nama }}"
                 data-price="{{ $menu->harga }}">
 
-                <img src="{{ asset('storage/'.$menu->foto) }}"
-                     class="w-full h-32 object-cover rounded">
-
+                <img src="{{ asset('storage/'.$menu->gambar) }}"
+                    class="w-full h-32 object-cover rounded">
                 <div class="mt-2 font-semibold">{{ $menu->nama }}</div>
                 <div class="text-blue-600 font-bold">
                     Rp {{ number_format($menu->harga) }}
                 </div>
-
             </div>
             @endforeach
         </div>
     </div>
 
-    {{-- KERANJANG --}}
+    {{-- PANEL KERANJANG --}}
     <div class="w-4/12 bg-white shadow-lg flex flex-col">
 
         <div class="p-4 border-b flex justify-between items-center">
@@ -43,9 +40,10 @@
             </form>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4" id="cartList"></div>
+        <div class="flex-1 overflow-y-scroll p-4" id="cartList"></div>
 
         <div class="border-t p-4">
+
             <div class="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span id="totalHarga">Rp 0</span>
@@ -55,14 +53,13 @@
                 class="w-full mt-4 bg-green-600 text-white p-3 rounded font-semibold">
                 Proses Pembayaran
             </button>
+
         </div>
     </div>
 </div>
 
 
-{{-- ==========================
-     MODAL PEMBAYARAN
-========================== --}}
+{{-- 🔽 MODAL PEMBAYARAN --}}
 <div id="paymentModal"
      class="fixed inset-0 bg-black/40 flex items-center justify-center hidden">
 
@@ -75,12 +72,11 @@
                placeholder="Opsional">
 
         <label class="block text-sm">Nama Kasir</label>
-        <input type="text" id="namaKasir" class="w-full p-2 border rounded mb-3"
+        <input type="text" class="w-full p-2 border rounded mb-3"
                value="{{ auth()->user()->name }}" readonly>
 
         <label class="block text-sm">Total</label>
-        <input type="text" id="totalTagihan"
-               class="w-full p-2 border rounded mb-3 bg-gray-100" readonly>
+        <input type="text" id="totalTagihan" class="w-full p-2 border rounded mb-3 bg-gray-100" readonly>
 
         <label class="block text-sm">Pembayaran</label>
         <select id="metodePembayaran" class="w-full p-2 border rounded mb-3">
@@ -113,9 +109,9 @@
 </div>
 
 
-
 <script>
 let cart = [];
+
 
 /* -----------------------------
    RENDER CART
@@ -155,6 +151,7 @@ function renderCart() {
         "Rp " + new Intl.NumberFormat().format(total);
 }
 
+
 /* -----------------------------
    UPDATE QTY
 ------------------------------*/
@@ -164,12 +161,12 @@ function updateQty(i, val) {
     renderCart();
 }
 
-/* -----------------------------
+
+/* ---------------------------
    ADD MENU TO CART
-------------------------------*/
+----------------------------*/
 document.querySelectorAll('.menu-item').forEach(item => {
     item.addEventListener('click', () => {
-
         let data = {
             id: item.dataset.id,
             nama: item.dataset.name,
@@ -183,6 +180,7 @@ document.querySelectorAll('.menu-item').forEach(item => {
         renderCart();
     });
 });
+
 
 /* -----------------------------
    MODAL PEMBAYARAN
@@ -202,18 +200,19 @@ document.getElementById("btnBayar").addEventListener("click", () => {
     toggleModal(true);
 });
 
+
 /* -----------------------------
    HITUNG KEMBALIAN
 ------------------------------*/
 document.getElementById("jumlahBayar").addEventListener("input", () => {
-
     let total = cart.reduce((a, b) => a + b.harga * b.qty, 0);
-    let bayar  = parseInt(document.getElementById("jumlahBayar").value || 0);
+    let bayar = parseInt(document.getElementById("jumlahBayar").value || 0);
 
     document.getElementById("kembalian").value =
         bayar >= total ? "Rp " + new Intl.NumberFormat().format(bayar - total)
                        : "Belum cukup";
 });
+
 
 /* -----------------------------
    SIMPAN TRANSAKSI
@@ -227,12 +226,10 @@ document.getElementById("btnSimpanPembayaran").addEventListener("click", () => {
             "X-CSRF-TOKEN": "{{ csrf_token() }}"
         },
         body: JSON.stringify({
-            pelanggan  : document.getElementById("namaPelanggan").value,
-            kasir_id   : "{{ auth()->id() }}",
-            kasir_nama : "{{ auth()->user()->name }}",
-            items      : cart,
-            metode     : document.getElementById("metodePembayaran").value,
-            bayar      : document.getElementById("jumlahBayar").value
+            pelanggan: document.getElementById("namaPelanggan").value,
+            items: cart,
+            metode: document.getElementById("metodePembayaran").value,
+            bayar: document.getElementById("jumlahBayar").value
         })
     })
     .then(res => res.json())

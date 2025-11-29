@@ -8,21 +8,34 @@ use Illuminate\Http\Request;
 
 class StokHarianController extends Controller
 {
+    public function index()
+    {
+        $stokharian = StokHarian::with('bahan')
+            ->orderBy('tanggal','desc')
+            ->get();
+
+        return view('admin.stokharian.index', compact('stokharian'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
             'bahan_id' => 'required|exists:bahan_baku,id',
-            'stok_awal' => 'required|numeric|min:0',
-            'stok_akhir' => 'required|numeric|min:0',
             'tanggal' => 'required|date',
         ]);
 
-        StokHarian::create([
-            'bahan_id' => $request->bahan_id,
-            'stok_awal' => $request->stok_awal,
-            'stok_akhir' => $request->stok_akhir,
-            'tanggal' => $request->tanggal
-        ]);
+        $bahan = BahanBaku::findOrFail($request->bahan_id);
+
+        StokHarian::updateOrCreate(
+            [
+                'bahan_id' => $request->bahan_id,
+                'tanggal'  => $request->tanggal
+            ],
+            [
+                'stok' => $bahan->stok,
+                'status' => $bahan->status,
+            ]
+        );
 
         return back()->with('success', 'Stok harian dicatat.');
     }

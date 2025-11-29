@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PembelianBahan extends Model
 {
-    use HasFactory;
-
     protected $table = 'pembelian_bahan';
 
     protected $fillable = [
@@ -16,24 +13,24 @@ class PembelianBahan extends Model
         'tanggal',
         'total_harga',
         'keterangan',
-        'created_by',
+        'created_by'
     ];
 
-    // Relasi ke Supplier
+    // relasi ke supplier
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
-    // Relasi ke detail pembelian
-    public function detailPembelian()
-    {
-        return $this->hasMany(DetailPembelianBahan::class, 'pembelian_bahan_id');
-    }
-
-    // Relasi ke User
-    public function user()
+    // relasi ke user yang membuat
+    public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // relasi ke detail pembelian (kalau nanti mau ditambah)
+    public function detail()
+    {
+        return $this->hasMany(PembelianDetail::class, 'pembelian_id');
     }
 }

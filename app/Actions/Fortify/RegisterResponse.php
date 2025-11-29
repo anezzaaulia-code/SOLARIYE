@@ -11,13 +11,14 @@ class RegisterResponse implements RegisterResponseContract
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            return redirect()->intended('/dashboard/admin');
+    return redirect()->intended('/dashboard');
+        }
+        if ($user->role === 'kasir') {
+            return redirect()->intended('/pos');
         }
 
-        if ($user->role === 'sales') {
-            return redirect()->intended('/dashboard/sales');
-        }
-
+        // default fallback
         return redirect()->intended('/dashboard');
+
     }
 }

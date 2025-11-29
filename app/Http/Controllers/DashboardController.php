@@ -14,21 +14,17 @@ class DashboardController extends Controller
         $this->middleware('auth');
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        // ==========================
-        // Redirect jika kasir
-        // ==========================
+        // Jika kasir membuka dashboard → langsung ke halaman POS.
         if (auth()->user()->role === 'kasir') {
-            return redirect()->route('pos.index');
+            return redirect()->route('kasir.pos');
         }
 
-        // ==========================
-        // Dashboard Admin
-        // ==========================
+        // ==== Dashboard Admin ====
         $today = now()->toDateString();
 
-        // Pendapatan hari ini
+        // Pemasukan hari ini
         $pemasukanHari = Keuangan::where('jenis', 'pemasukan')
             ->whereDate('tanggal', $today)
             ->sum('nominal');
@@ -38,7 +34,7 @@ class DashboardController extends Controller
             ->whereDate('tanggal', $today)
             ->sum('nominal');
 
-        // 5 menu terlaris minggu ini
+        // 5 Menu Terlaris Minggu Ini
         $topMenus = PesananDetail::selectRaw('menu_id, SUM(jumlah) as total_qty')
             ->whereHas('pesanan', function ($q) {
                 $q->where('created_at', '>=', now()->subDays(7));
@@ -49,19 +45,13 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ==========================
-        // Stok menipis
-        // karena tabelmu TIDAK ada stok_akhir
-        // jadi aku pake kolom stok
-        // ==========================
+        // Stok Menipis (≤ 10)
         $stokMenipis = BahanBaku::where('stok', '<=', 10)
-            ->orderBy('stok', 'asc')
+            ->orderBy('stok')
             ->limit(10)
             ->get();
 
-        // ==========================
-        // Grafik pemasukan 7 hari
-        // ==========================
+        // Grafik Pemasukan 7 Hari
         $chart = Keuangan::selectRaw("
                 DATE(tanggal) as tanggal,
                 SUM(CASE WHEN jenis='pemasukan' THEN nominal ELSE 0 END) as pemasukan
@@ -71,10 +61,6 @@ class DashboardController extends Controller
             ->orderBy('tanggal')
             ->get();
 
-        // ==========================
-        // RETURN VIEW ADMIN
-        // pastikan file: resources/views/admin/dashboard.blade.php
-        // ==========================
         return view('admin.dashboard', compact(
             'pemasukanHari',
             'pengeluaranHari',

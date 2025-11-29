@@ -25,4 +25,15 @@ class POSController extends Controller
         $pesananController = app()->make(PesananController::class);
         return $pesananController->store($request);
     }
+
+    public function riwayat()
+    {
+        // Ambil transaksi berdasarkan kasir yang login
+        $riwayat = Transaksi::where('kasir_id', auth()->id())
+                    ->latest()
+                    ->get();
+
+        return view('kasir.riwayat.index', compact('riwayat'));
+    }
+
 }

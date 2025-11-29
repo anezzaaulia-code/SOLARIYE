@@ -11,16 +11,15 @@ return new class extends Migration {
             $table->string('nama_bahan');
             $table->string('satuan', 50);
 
-            // stok harian
-            $table->integer('stok_awal')->default(0);
-            $table->integer('stok_akhir')->default(0);
+            // stok saat ini (bukan stok harian)
+            $table->integer('stok')->default(0);
 
-            // indikator warna
-            $table->enum('status_warna', ['hijau','kuning','merah'])->default('hijau');
-
-            // batas indikator
+            // batas indikator warna
             $table->integer('batas_kuning')->default(0);
             $table->integer('batas_merah')->default(0);
+
+            // status hasil perhitungan
+            $table->enum('status_warna', ['aman','menipis','habis'])->default('aman');
 
             $table->timestamps();
         });

@@ -18,6 +18,7 @@ class KeuanganController extends Controller
         return view('admin.keuangan.index');
     }
 
+<<<<<<< HEAD
     // FORM INPUT
     public function create(Request $request)
     {
@@ -50,6 +51,14 @@ class KeuanganController extends Controller
                 ? 'pengeluaran.index' 
                 : 'pendapatan.index'
         )->with('success', 'Data keuangan berhasil ditambahkan.');
+=======
+    public function create(Request $request)
+    {
+    // jenis bisa: pemasukan / pengeluaran
+    $jenis = $request->jenis ?? null;
+
+    return view('admin.keuangan.create', compact('jenis'));
+>>>>>>> 1f1cf2366c49b48c1c5e43744f813d8dfafc5df6
     }
 
     // PENDAPATAN

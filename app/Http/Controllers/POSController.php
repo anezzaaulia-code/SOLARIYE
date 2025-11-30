@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Menu;
+use App\Models\Pesanan;
 use App\Http\Controllers\PesananController;
 
 class POSController extends Controller
@@ -29,7 +30,7 @@ class POSController extends Controller
     public function riwayat()
     {
         // Ambil transaksi berdasarkan kasir yang login
-        $riwayat = Transaksi::where('kasir_id', auth()->id())
+        $riwayat = Pesanan::where('kasir_id', auth()->id())
                     ->latest()
                     ->get();
 

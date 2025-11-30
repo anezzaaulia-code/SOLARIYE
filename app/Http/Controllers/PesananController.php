@@ -54,40 +54,49 @@ class PesananController extends Controller
                 'kasir_id' => auth()->id(),
             ]);
 
-            foreach ($request->items as $it) {
-                $menu = Menu::find($it['menu_id']);
+            foreach ($request->items as $item) {
+                $menu = Menu::findOrFail($item['menu_id']);
                 $harga = $menu->harga;
-                $jumlah = $it['jumlah'];
+                $jumlah = $item['jumlah'];
                 $subtotal = $harga * $jumlah;
                 $total += $subtotal;
 
+                // Buat detail pesanan
                 $pesanan->detail()->create([
                     'menu_id' => $menu->id,
                     'jumlah' => $jumlah,
                     'harga' => $harga,
                     'subtotal' => $subtotal,
                 ]);
+
+                // OPTIONAL: Kurangi stok (kalau sistem pakai stok)
+                // jika tidak pakai stok, hapus blok ini
+                if ($menu->stok !== null) {
+                    $menu->stok -= $jumlah;
+                    $menu->save();
+                }
             }
 
+            // Update total harga
             $pesanan->total_harga = $total;
             $pesanan->save();
 
-            // buat keuangan (pemasukan)
+            // Catat pemasukan keuangan
             Keuangan::create([
                 'tanggal' => now()->toDateString(),
                 'jenis' => 'pemasukan',
                 'sumber' => 'penjualan',
                 'nominal' => $total,
-                'keterangan' => 'Penjualan Kode:'.$pesanan->kode_pesanan,
+                'keterangan' => 'Penjualan Kode: '.$pesanan->kode_pesanan,
                 'ref_id' => $pesanan->id,
                 'created_by' => auth()->id(),
             ]);
 
             DB::commit();
-            return redirect()->route('pesanan.show', $pesanan->id)->with('success','Pesanan dibuat.');
+            return redirect()->route('pesanan.show', $pesanan->id)->with('success', 'Pesanan berhasil dibuat.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->with('error','Gagal membuat pesanan: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Gagal membuat pesanan: '.$e->getMessage());
         }
     }
 
@@ -105,17 +114,31 @@ class PesananController extends Controller
         ]);
 
         $pesanan->update($data);
-        return back()->with('success','Pesanan diupdate.');
+        return back()->with('success', 'Pesanan berhasil diupdate.');
     }
 
     public function destroy(Pesanan $pesanan)
     {
         DB::transaction(function () use ($pesanan) {
-            Keuangan::where('ref_id', $pesanan->id)->where('jenis','pemasukan')->delete();
+
+            // Hapus catatan pemasukan keuangan
+            Keuangan::where('ref_id', $pesanan->id)
+                ->where('jenis', 'pemasukan')
+                ->delete();
+
+            // Kembalikan stok jika sebelumnya dikurangi
+            foreach ($pesanan->detail as $detail) {
+                if ($detail->menu->stok !== null) {
+                    $detail->menu->stok += $detail->jumlah;
+                    $detail->menu->save();
+                }
+            }
+
+            // Hapus detail dan pesanan
             $pesanan->detail()->delete();
             $pesanan->delete();
         });
 
-        return back()->with('success','Pesanan dihapus.');
+        return back()->with('success', 'Pesanan berhasil dihapus.');
     }
 }

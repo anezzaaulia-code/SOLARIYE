@@ -18,7 +18,7 @@ use App\Http\Controllers\PesananController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BahanBakuController;
-use App\Models\Menu;  
+use App\Models\Menu;
 
 
 
@@ -163,8 +163,6 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-<<<<<<< HEAD
-=======
 Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
 Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
 Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
@@ -175,7 +173,7 @@ Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluar
 Route::get('/keuangan/create', [KeuanganController::class, 'create'])
     ->name('keuangan.create')
     ->middleware('admin');
->>>>>>> 1f1cf2366c49b48c1c5e43744f813d8dfafc5df6
+
 
 // STOK HARIAN
 Route::prefix('stok-harian')->name('stokharian.')->group(function () {

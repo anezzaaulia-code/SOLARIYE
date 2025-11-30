@@ -27,4 +27,9 @@ class DetailPembelianBahan extends Model
     {
         return $this->belongsTo(BahanBaku::class, 'bahan_id');
     }
+
+    public function menu()
+    {
+        return $this->belongsTo(Menu::class, 'menu_id');
+    }
 }

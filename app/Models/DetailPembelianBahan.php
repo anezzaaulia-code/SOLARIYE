@@ -15,7 +15,7 @@ class DetailPembelianBahan extends Model
         'bahan_id',
         'qty',
         'harga_satuan',
-        'total_harga'
+        'subtotal'
     ];
 
     public function pembelian()

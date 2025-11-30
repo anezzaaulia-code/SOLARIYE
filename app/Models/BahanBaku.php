@@ -20,4 +20,16 @@ class BahanBaku extends Model
     {
         return $this->hasMany(StokHarian::class, 'bahan_id');
     }
+
+    public function updateStatus()
+    {
+        if ($this->stok <= 0) {
+            $this->status = 'Habis';
+        } elseif ($this->stok <= 10) {
+            $this->status = 'Menipis';
+        } else {
+            $this->status = 'Aman';
+        }
+    }
+
 }

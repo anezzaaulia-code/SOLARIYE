@@ -17,6 +17,13 @@ class StokHarianController extends Controller
         return view('admin.stokharian.index', compact('stokharian'));
     }
 
+        public function create()
+    {
+        $bahan = BahanBaku::all(); // untuk dropdown pilih bahan
+
+        return view('admin.stokharian.create', compact('bahan'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

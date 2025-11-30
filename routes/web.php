@@ -163,6 +163,7 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
+
 Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
 Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
 Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');

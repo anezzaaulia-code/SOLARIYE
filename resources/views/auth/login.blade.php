@@ -11,116 +11,116 @@
         body {
             height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #c471f5, #fa71cd, #6bb9f0);
-            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Arial';
+            background: url('/storage/login/clouds.jpg') no-repeat center center fixed;
+            background-size: cover;
         }
 
         .login-card {
-            width: 360px;
+            width: 420px;
             padding: 35px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(18px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            color: #fff;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.28);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
         }
 
         .login-card input {
-            background: rgba(0, 0, 0, 0.25);
-            border: none;
-            color: white;
-        }
-
-        .login-card input::placeholder {
-            color: #ddd;
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ddd;
         }
 
         .login-card input:focus {
-            background: rgba(0, 0, 0, 0.35);
-            color: #fff;
-        }
-
-        .profile-icon {
-            width: 80px;
-            height: 80px;
-            margin: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 38px;
-            margin-bottom: 20px;
+            background: white;
+            border-color: #6cb4ff;
         }
 
         .btn-login {
-            background: rgba(255, 255, 255, 0.25);
-            color: #fff;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
             width: 100%;
-            font-weight: bold;
-            transition: 0.2s;
+            padding: 12px;
+            background-color: #141414;
+            border-radius: 12px;
+            border: none;
+            color: #fff;
+            font-weight: 600;
         }
 
         .btn-login:hover {
-            background: rgba(255, 255, 255, 0.4);
+            background-color: #000;
         }
 
-        a {
-            color: #fff;
+        .register-btn {
+            margin-top: 12px;
+            background: transparent;
+            border: 1px solid #000;
+            padding: 10px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #000;
+            text-decoration: none;
+        }
+
+        .register-btn {
+            margin-top: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        .header-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 12px;
+            font-size: 22px;
+            color: #000;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .text-small {
+            font-size: 13px;
+            color: #444;
         }
     </style>
+
 </head>
-
 <body>
-    <div class="login-card">
 
-        <div class="profile-icon">
-            <i class="bi bi-person" style="font-size: 42px;"></i>
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <div class="login-card">
+
+            <div class="text-center mb-4">
+                <img src="/storage/logo.png" width="70">
+            </div>
+
+            <h3 class="text-center mb-2">Sign in with email</h3>
+            <p class="text-center text-muted">Login to access menu management</p>
+
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
+
+                <label>Email</label>
+                <input type="email" name="email" class="form-control mb-3" required>
+
+                <label>Password</label>
+                <input type="password" name="password" class="form-control mb-3" required>
+
+                <button class="btn btn-dark w-100">Get Started</button>
+
+                <a href="{{ route('register') }}" class="register-btn">Register</a>
+            </form>
+
         </div>
-
-        <h4 class="text-center mb-4">LOGIN</h4>
-
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-
-            <div class="mb-3">
-                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                       placeholder="Email ID" value="{{ old('email') }}" required>
-                @error('email')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                       placeholder="Password" required>
-                @error('password')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="d-flex justify-content-between mb-3">
-                <div>
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember me</label>
-                </div>
-                <a href="{{ route('password.request') }}">Forgot Password?</a>
-            </div>
-
-            <button type="submit" class="btn-login">LOGIN</button>
-        </form>
-
-        <p class="mt-3 text-center">
-            Don't have an account? <a href="{{ route('register') }}"><strong>Register</strong></a>
-        </p>
     </div>
+
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </body>

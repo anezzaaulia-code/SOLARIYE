@@ -90,7 +90,7 @@ class PembelianBahanController extends Controller
                 $subtotal = $qty * $harga;
 
                 DetailPembelianBahan::create([
-                    'pembelian_id' => $pembelian->id,
+                    'pembelian_bahan_id' => $pembelian->id,
                     'bahan_id' => $bahanId,
                     'qty' => $qty,
                     'harga_satuan' => $harga,
@@ -100,7 +100,6 @@ class PembelianBahanController extends Controller
                 // UPDATE STOK BAHAN
                 $bahan = BahanBaku::find($bahanId);
                 $bahan->stok += $qty;
-                $bahan->updateStatus(); // otomatis aman/menipis/habis
                 $bahan->save();
 
                 // UPDATE / CREATE STOK HARIAN

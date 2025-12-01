@@ -24,8 +24,18 @@ class StokHarianController extends Controller
         return view('admin.stokharian.create', compact('bahan'));
     }
 
+    public function edit($id)
+    {
+        $stok = StokHarian::findOrFail($id);
+        $bahan = BahanBaku::all();
+
+        return view('admin.stokharian.edit', compact('stok', 'bahan'));
+    }
+
+
     public function store(Request $request)
     {
+        dd('MASUK STORE');
         $request->validate([
             'bahan_id' => 'required|exists:bahan_baku,id',
             'tanggal' => 'required|date',

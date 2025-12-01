@@ -99,7 +99,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('supplier', SupplierController::class);
     Route::resource('pembelian', PembelianBahanController::class);
     Route::resource('detail-pembelian', DetailPembelianBahanController::class);
-    Route::resource('stok', StokHarianController::class);
+    Route::resource('stokharian', StokHarianController::class);
 
     // Keuangan
     Route::get('/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran');
@@ -176,17 +176,6 @@ Route::get('/keuangan/create', [KeuanganController::class, 'create'])
     ->middleware('admin');
 
 
-// STOK HARIAN
-Route::prefix('stok-harian')->name('stokharian.')->group(function () {
-    Route::get('/', [App\Http\Controllers\StokHarianController::class, 'index'])
-        ->name('index');
-});
-
-
-
 // Bahan baku
 Route::resource('bahanbaku', BahanBakuController::class);
-
-// Stok Harian
-Route::resource('stokharian', StokHarianController::class);
 

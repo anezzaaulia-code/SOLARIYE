@@ -4,6 +4,32 @@
 <div class="container mt-4">
 
     <h4>Edit Pembelian Bahan</h4>
+    {{-- Pesan Error --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>Terjadi kesalahan:</strong>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Pesan Error dari Controller (gagal menyimpan dll) --}}
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    {{-- Pesan sukses --}}
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
 
     <form action="{{ route('pembelian.update', $pembelian->id) }}" method="POST">
         @csrf
@@ -63,7 +89,7 @@
                             </td>
 
                             <td>
-                                <input type="number" name="harga[]" class="form-control" value="{{ $d->harga_satuan }}" min="1" required>
+                                <input type="number" name="harga_satuan[]" class="form-control" value="{{ $d->harga_satuan }}" min="1" required>
                             </td>
 
                             <td class="subtotal-col">

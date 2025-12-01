@@ -86,7 +86,12 @@
                             <td>
                                 <input type="number" name="harga_satuan[]" class="form-control" required min="0">
                             </td>
-
+                            <select name="satuan[]" class="form-control" required>
+                                <option value="pcs">pcs</option>
+                                <option value="kg">kg</option>
+                                <option value="gram">gram</option>
+                                <option value="liter">liter</option>
+                            </select>
                             <td>
                                 <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
                             </td>

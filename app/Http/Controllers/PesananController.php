@@ -29,76 +29,32 @@ class PesananController extends Controller
         return view('pesanan.create', compact('menus'));
     }
 
-    /**
-     * items => [{menu_id, jumlah}, ...]
-     */
-    public function store(Request $request)
+    public function store(Request $request, $returnObject = false)
     {
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.menu_id' => 'required|exists:menu,id',
-            'items.*.jumlah' => 'required|integer|min:1',
-            'metode_bayar' => 'required|in:tunai,qris,transfer',
+        $pesanan = Pesanan::create([
+            'pelanggan'  => $request->pelanggan,
+            'nomor_wa'   => $request->nomor_wa,
+            'kasir_id'   => $request->kasir_id,
+            'kasir_nama' => $request->kasir_nama,
+            'metode'     => $request->metode,
+            'bayar'      => $request->bayar,
+            'total'      => collect($request->items)->sum(fn($i) => $i['harga'] * $i['qty']),
         ]);
 
-        DB::beginTransaction();
-        try {
-            $total = 0;
-            $kode = 'PSN-'.date('YmdHis').'-'.Str::upper(Str::random(4));
-
-            $pesanan = Pesanan::create([
-                'kode_pesanan' => $kode,
-                'total_harga' => 0,
-                'metode_bayar' => $request->metode_bayar,
-                'status' => 'diproses',
-                'kasir_id' => auth()->id(),
+        foreach ($request->items as $i) {
+            $pesanan->detail()->create([
+                'menu_id' => $i['id'],
+                'nama'    => $i['nama'],
+                'harga'   => $i['harga'],
+                'qty'     => $i['qty']
             ]);
-
-            foreach ($request->items as $item) {
-                $menu = Menu::findOrFail($item['menu_id']);
-                $harga = $menu->harga;
-                $jumlah = $item['jumlah'];
-                $subtotal = $harga * $jumlah;
-                $total += $subtotal;
-
-                // Buat detail pesanan
-                $pesanan->detail()->create([
-                    'menu_id' => $menu->id,
-                    'jumlah' => $jumlah,
-                    'harga' => $harga,
-                    'subtotal' => $subtotal,
-                ]);
-
-                // OPTIONAL: Kurangi stok (kalau sistem pakai stok)
-                // jika tidak pakai stok, hapus blok ini
-                if ($menu->stok !== null) {
-                    $menu->stok -= $jumlah;
-                    $menu->save();
-                }
-            }
-
-            // Update total harga
-            $pesanan->total_harga = $total;
-            $pesanan->save();
-
-            // Catat pemasukan keuangan
-            Keuangan::create([
-                'tanggal' => now()->toDateString(),
-                'jenis' => 'pemasukan',
-                'sumber' => 'penjualan',
-                'nominal' => $total,
-                'keterangan' => 'Penjualan Kode: '.$pesanan->kode_pesanan,
-                'ref_id' => $pesanan->id,
-                'created_by' => auth()->id(),
-            ]);
-
-            DB::commit();
-            return redirect()->route('pesanan.show', $pesanan->id)->with('success', 'Pesanan berhasil dibuat.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Gagal membuat pesanan: '.$e->getMessage());
         }
+
+        if ($returnObject) return $pesanan;
+
+        return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil dibuat');
     }
+
 
     public function show(Pesanan $pesanan)
     {
@@ -121,20 +77,18 @@ class PesananController extends Controller
     {
         DB::transaction(function () use ($pesanan) {
 
-            // Hapus catatan pemasukan keuangan
             Keuangan::where('ref_id', $pesanan->id)
                 ->where('jenis', 'pemasukan')
                 ->delete();
 
-            // Kembalikan stok jika sebelumnya dikurangi
+            // ✔ FIX ERROR: gunakan qty bukan jumlah
             foreach ($pesanan->detail as $detail) {
-                if ($detail->menu->stok !== null) {
-                    $detail->menu->stok += $detail->jumlah;
+                if ($detail->menu && $detail->menu->stok !== null) {
+                    $detail->menu->stok += $detail->qty;
                     $detail->menu->save();
                 }
             }
 
-            // Hapus detail dan pesanan
             $pesanan->detail()->delete();
             $pesanan->delete();
         });

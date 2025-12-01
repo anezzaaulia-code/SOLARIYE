@@ -74,9 +74,10 @@
         <input type="text" id="namaPelanggan" class="w-full p-2 border rounded mb-3"
                placeholder="Opsional">
 
-        <label class="block text-sm">Nama Kasir</label>
-        <input type="text" id="namaKasir" class="w-full p-2 border rounded mb-3"
-               value="{{ auth()->user()->name }}" readonly>
+        <label class="block text-sm">Nomor WhatsApp</label>
+        <input type="text" id="nomorWA"
+                class="w-full p-2 border rounded mb-3"
+                placeholder="Contoh: 6281234567890">
 
         <label class="block text-sm">Total</label>
         <input type="text" id="totalTagihan"
@@ -218,31 +219,63 @@ document.getElementById("jumlahBayar").addEventListener("input", () => {
 /* -----------------------------
    SIMPAN TRANSAKSI
 ------------------------------*/
-document.getElementById("btnSimpanPembayaran").addEventListener("click", () => {
+    document.getElementById("btnSimpanPembayaran").addEventListener("click", async () => {
 
-    fetch("{{ route('kasir.pos.store') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-        },
-        body: JSON.stringify({
-            pelanggan  : document.getElementById("namaPelanggan").value,
-            kasir_id   : "{{ auth()->id() }}",
-            kasir_nama : "{{ auth()->user()->name }}",
-            items      : cart,
-            metode     : document.getElementById("metodePembayaran").value,
-            bayar      : document.getElementById("jumlahBayar").value
-        })
-    })
-    .then(res => res.json())
-    .then(res => {
-        alert("Transaksi berhasil disimpan!");
-        cart = [];
-        renderCart();
-        toggleModal(false);
+        if (cart.length === 0) {
+            alert("Keranjang kosong!");
+            return;
+        }
+
+        let nomorWA = document.getElementById("nomorWA").value;
+        if (nomorWA && nomorWA.length < 10) {
+            alert("Nomor WA tidak valid!");
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ route('kasir.pos.store') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    pelanggan  : document.getElementById("namaPelanggan").value,
+                    nomor_wa   : nomorWA,
+                    kasir_id   : "{{ auth()->id() }}",
+                    kasir_nama : "{{ auth()->user()->name }}",
+                    items      : cart,
+                    metode     : document.getElementById("metodePembayaran").value,
+                    bayar      : document.getElementById("jumlahBayar").value
+                })
+            });
+
+            const res = await response.json();
+            console.log("RESP:", res);
+
+            if (!res.success) {
+                alert("Gagal simpan transaksi");
+                return;
+            }
+
+            // RESET CART
+            cart = [];
+            renderCart();
+            toggleModal(false);
+
+            // CETAK STRUK
+            if (res.struk_url) {
+                window.open(res.struk_url, "_blank");
+            }
+
+            alert("Transaksi disimpan!");
+
+        } catch (e) {
+            console.error(e);
+            alert("Terjadi error: " + e.message);
+        }
+
     });
-});
 </script>
 
 @endsection

@@ -22,10 +22,28 @@ class POSController extends Controller
 
     public function store(Request $request)
     {
-        // delegate to PesananController store
-        $pesananController = app()->make(PesananController::class);
-        return $pesananController->store($request);
+        try {
+
+            // Panggil pesanan controller
+            $pesananController = app()->make(PesananController::class);
+            $pesanan = $pesananController->store($request, true); // <-- TRUE = return data, bukan redirect
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil disimpan',
+                'struk_url' => route('kasir.pos.struk', $pesanan->id)
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+
+        }
     }
+
 
     public function riwayat()
     {

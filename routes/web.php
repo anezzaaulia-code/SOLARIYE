@@ -179,3 +179,4 @@ Route::get('/keuangan/create', [KeuanganController::class, 'create'])
 // Bahan baku
 Route::resource('bahanbaku', BahanBakuController::class);
 
+Route::get('/register', [RegisterController::class, 'index'])->name('register');

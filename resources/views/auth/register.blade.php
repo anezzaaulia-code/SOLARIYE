@@ -45,7 +45,7 @@
 
         <h3 class="text-center mb-3">Register Akun</h3>
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('register.store') }}">
             @csrf
 
             {{-- Nama --}}

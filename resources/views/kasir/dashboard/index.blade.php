@@ -1,9 +1,10 @@
 @extends('layouts.kasir')
 
 @section('content')
+<div class="flex h-screen w-full overflow-hidden"> {{-- Container utama --}}
 
-    {{-- SIDEBAR KIRI (MENU) --}}
-    <div class="w-8/12 p-4 overflow-y-scroll bg-gray-100">
+    {{-- 🔹 MENU KIRI --}}
+    <div class="w-8/12 p-4 overflow-y-auto bg-gray-100">
 
         <input type="text" id="searchMenu" class="w-full p-2 mb-4 border rounded"
             placeholder="Cari menu...">
@@ -17,6 +18,7 @@
 
                 <img src="{{ asset('storage/'.$menu->gambar) }}"
                     class="w-full h-32 object-cover rounded">
+
                 <div class="mt-2 font-semibold">{{ $menu->nama }}</div>
                 <div class="text-blue-600 font-bold">
                     Rp {{ number_format($menu->harga) }}
@@ -26,7 +28,8 @@
         </div>
     </div>
 
-    {{-- PANEL KERANJANG --}}
+
+    {{-- 🔹 PANEL KERANJANG --}}
     <div class="w-4/12 bg-white shadow-lg flex flex-col">
 
         <div class="p-4 border-b flex justify-between items-center">
@@ -40,10 +43,9 @@
             </form>
         </div>
 
-        <div class="flex-1 overflow-y-scroll p-4" id="cartList"></div>
+        <div class="flex-1 overflow-y-auto p-4" id="cartList"></div>
 
         <div class="border-t p-4">
-
             <div class="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span id="totalHarga">Rp 0</span>
@@ -53,10 +55,11 @@
                 class="w-full mt-4 bg-green-600 text-white p-3 rounded font-semibold">
                 Proses Pembayaran
             </button>
-
         </div>
     </div>
-</div>
+
+</div> {{-- <-- FIX penting: penutup container utama --}}
+@endsection
 
 
 {{-- 🔽 MODAL PEMBAYARAN --}}
@@ -109,13 +112,11 @@
 </div>
 
 
+{{-- 🔽 SCRIPT --}}
 <script>
 let cart = [];
 
-
-/* -----------------------------
-   RENDER CART
-------------------------------*/
+/* Render Cart */
 function renderCart() {
     let html = "";
     let total = 0;
@@ -126,20 +127,12 @@ function renderCart() {
         html += `
             <div class="border-b pb-3 mb-3">
                 <div class="font-semibold">${item.nama}</div>
-
                 <div class="flex justify-between items-center mt-1">
                     <div class="flex items-center gap-1">
-
-                        <button onclick="updateQty(${index}, -1)"
-                            class="px-2 bg-gray-200 rounded">-</button>
-
+                        <button onclick="updateQty(${index}, -1)" class="px-2 bg-gray-200 rounded">-</button>
                         <span>${item.qty}</span>
-
-                        <button onclick="updateQty(${index}, 1)"
-                            class="px-2 bg-gray-200 rounded">+</button>
-
+                        <button onclick="updateQty(${index}, 1)" class="px-2 bg-gray-200 rounded">+</button>
                     </div>
-
                     <div>Rp ${new Intl.NumberFormat().format(item.qty * item.harga)}</div>
                 </div>
             </div>
@@ -147,24 +140,17 @@ function renderCart() {
     });
 
     document.getElementById("cartList").innerHTML = html;
-    document.getElementById("totalHarga").innerText =
-        "Rp " + new Intl.NumberFormat().format(total);
+    document.getElementById("totalHarga").innerText = "Rp " + new Intl.NumberFormat().format(total);
 }
 
-
-/* -----------------------------
-   UPDATE QTY
-------------------------------*/
+/* Update qty */
 function updateQty(i, val) {
     cart[i].qty += val;
     if (cart[i].qty <= 0) cart.splice(i, 1);
     renderCart();
 }
 
-
-/* ---------------------------
-   ADD MENU TO CART
-----------------------------*/
+/* Add menu to cart */
 document.querySelectorAll('.menu-item').forEach(item => {
     item.addEventListener('click', () => {
         let data = {
@@ -173,21 +159,15 @@ document.querySelectorAll('.menu-item').forEach(item => {
             harga: parseInt(item.dataset.price),
             qty: 1
         };
-
         let exist = cart.find(c => c.id == data.id);
         exist ? exist.qty++ : cart.push(data);
-
         renderCart();
     });
 });
 
-
-/* -----------------------------
-   MODAL PEMBAYARAN
-------------------------------*/
+/* Modal pembayaran */
 function toggleModal(show) {
     document.getElementById("paymentModal").classList.toggle("hidden", !show);
-
     if (show) {
         let total = cart.reduce((a, b) => a + b.harga * b.qty, 0);
         document.getElementById("totalTagihan").value =
@@ -200,25 +180,17 @@ document.getElementById("btnBayar").addEventListener("click", () => {
     toggleModal(true);
 });
 
-
-/* -----------------------------
-   HITUNG KEMBALIAN
-------------------------------*/
+/* Hitung kembalian */
 document.getElementById("jumlahBayar").addEventListener("input", () => {
     let total = cart.reduce((a, b) => a + b.harga * b.qty, 0);
     let bayar = parseInt(document.getElementById("jumlahBayar").value || 0);
 
     document.getElementById("kembalian").value =
-        bayar >= total ? "Rp " + new Intl.NumberFormat().format(bayar - total)
-                       : "Belum cukup";
+        bayar >= total ? "Rp " + new Intl.NumberFormat().format(bayar - total) : "Belum cukup";
 });
 
-
-/* -----------------------------
-   SIMPAN TRANSAKSI
-------------------------------*/
+/* Simpan transaksi */
 document.getElementById("btnSimpanPembayaran").addEventListener("click", () => {
-
     fetch("{{ route('kasir.pos.store') }}", {
         method: "POST",
         headers: {
@@ -238,8 +210,7 @@ document.getElementById("btnSimpanPembayaran").addEventListener("click", () => {
         cart = [];
         renderCart();
         toggleModal(false);
+        location.reload(); // refresh agar keranjang & UI reset
     });
 });
 </script>
-
-@endsection

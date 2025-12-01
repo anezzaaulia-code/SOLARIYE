@@ -4,7 +4,7 @@
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4>Stok Harian</h4>
-        <a href="{{ route('stok_harian.create') }}" class="btn btn-primary">
+        <a href="{{ route('stokharian.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Input Stok Hari Ini
         </a>
     </div>
@@ -24,7 +24,7 @@
             </thead>
 
             <tbody>
-                @foreach ($stokHarian as $item)
+                @foreach ($stokharian as $item)
                 @php
                     $pemakaian = $item->stok_awal - $item->stok_akhir;
                     $warna = 'success';
@@ -34,17 +34,17 @@
 
                 <tr>
                     <td>{{ $item->tanggal }}</td>
-                    <td>{{ $item->bahanBaku->nama }}</td>
-                    <td>{{ $item->stok_awal }} {{ $item->bahanBaku->satuan }}</td>
-                    <td>{{ $item->stok_akhir }} {{ $item->bahanBaku->satuan }}</td>
-                    <td>{{ $pemakaian }} {{ $item->bahanBaku->satuan }}</td>
+                    <td>{{ $item->bahan->nama_bahan }}</td>
+                    <td>{{ $item->stok_awal }} {{ $item->bahan->satuan }}</td>
+                    <td>{{ $item->stok_akhir }} {{ $item->bahan->satuan }}</td>
+                    <td>{{ $pemakaian }} {{ $item->bahan->satuan }}</td>
                     <td>
                         <span class="badge bg-{{ $warna }}">
                             {{ ucfirst($warna) }}
                         </span>
                     </td>
                     <td>
-                        <a href="{{ route('stok_harian.edit', $item->id) }}" class="btn btn-warning btn-sm">
+                        <a href="{{ route('stokharian.edit', $item->id) }}" class="btn btn-warning btn-sm">
                             <i class="bi bi-pencil"></i>
                         </a>
                     </td>

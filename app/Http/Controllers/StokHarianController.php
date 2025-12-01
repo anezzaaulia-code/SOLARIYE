@@ -33,17 +33,37 @@ class StokHarianController extends Controller
 
         $bahan = BahanBaku::findOrFail($request->bahan_id);
 
+        // Ambil stok terakhir untuk bahan ini
+        $stokTerakhir = StokHarian::where('bahan_id', $request->bahan_id)
+            ->orderBy('tanggal', 'desc')
+            ->value('stok_akhir');
+
+        // Jika belum ada stok harian sebelumnya
+        $stok_awal = $stokTerakhir ?? 0;
+        $stok_akhir = $stok_awal; // belum ada pemakaian/penambahan karena harian baru
+
+        // Tentukan status warna berdasarkan stok akhir
+        if ($stok_akhir <= 0) {
+            $status = 'habis';
+        } elseif ($stok_akhir <= $bahan->batas_merah) {
+            $status = 'menipis';
+        } else {
+            $status = 'aman';
+        }
+
         StokHarian::updateOrCreate(
             [
                 'bahan_id' => $request->bahan_id,
                 'tanggal'  => $request->tanggal
             ],
             [
-                'stok' => $bahan->stok,
-                'status' => $bahan->status,
+                'stok_awal'    => $stok_awal,
+                'stok_akhir'   => $stok_akhir,
+                'status_warna' => $status
             ]
         );
 
-        return back()->with('success', 'Stok harian dicatat.');
+        return back()->with('success', 'Stok harian berhasil dicatat.');
     }
+
 }

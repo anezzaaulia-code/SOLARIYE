@@ -46,15 +46,33 @@
                     </thead>
 
                     <tbody>
-                        @foreach ($detail as $d)
+                        @foreach ($detail as $i => $d)
                         <tr>
-                            <td>{{ $d->bahan->nama_bahan }}</td>
-                            <td>{{ $d->qty }}</td>
-                            <td>Rp {{ number_format($d->harga_satuan) }}</td>
-                            <td>Rp {{ number_format($d->subtotal) }}</td>
+                            <td>
+                                <select name="bahan_id[]" class="form-select" required>
+                                    @foreach ($bahan as $b)
+                                        <option value="{{ $b->id }}" {{ $b->id == $d->bahan_id ? 'selected' : '' }}>
+                                            {{ $b->nama_bahan }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="number" name="qty[]" class="form-control" value="{{ $d->qty }}" min="1" required>
+                            </td>
+
+                            <td>
+                                <input type="number" name="harga[]" class="form-control" value="{{ $d->harga_satuan }}" min="1" required>
+                            </td>
+
+                            <td class="subtotal-col">
+                                Rp {{ number_format($d->qty * $d->harga_satuan) }}
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
+
                 </table>
 
                 <div class="mt-4 text-end">

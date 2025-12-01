@@ -98,7 +98,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('menu', MenuController::class);
     Route::resource('supplier', SupplierController::class);
     Route::resource('pembelian', PembelianBahanController::class);
-    Route::resource('pembelian', DetailPembelianBahanController::class);
+    Route::resource('detail-pembelian', DetailPembelianBahanController::class);
     Route::resource('stok', StokHarianController::class);
 
     // Keuangan
@@ -186,9 +186,6 @@ Route::prefix('stok-harian')->name('stokharian.')->group(function () {
 
 // Bahan baku
 Route::resource('bahanbaku', BahanBakuController::class);
-
-// Pembelian
-Route::resource('pembelian', PembelianBahanController::class);
 
 // Stok Harian
 Route::resource('stokharian', StokHarianController::class);

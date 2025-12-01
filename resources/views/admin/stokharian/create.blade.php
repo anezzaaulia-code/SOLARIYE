@@ -7,24 +7,24 @@
     </div>
 
     <div class="card-body">
-        <form action="{{ route('stok_harian.store') }}" method="POST">
+        <form action="{{ route('stokharian.store') }}" method="POST">
             @csrf
 
-            <div class="mb-3">
+           <div class="mb-3">
                 <label class="form-label">Pilih Bahan</label>
                 <select name="bahan_baku_id" class="form-control" required>
                     <option value="">-- Pilih Bahan --</option>
-                    @foreach ($bahanBaku as $bahan)
-                        <option value="{{ $bahan->id }}">
-                            {{ $bahan->nama }} (Stok: {{ $bahan->stok }} {{ $bahan->satuan }})
+                    @foreach ($bahan as $b)
+                        <option value="{{ $b->id }}">
+                            {{ $b->nama_bahan }} (Stok: {{ $b->stok }} {{ $b->satuan }})
                         </option>
                     @endforeach
                 </select>
             </div>
-
+            
             <div class="mb-3">
                 <label class="form-label">Stok Awal</label>
-                <input type="number" name="stok_awal" class="form-control" 
+                <input type="number" name="stok_awal" class="form-control"
                        placeholder="Otomatis diambil dari stok bahan baku"
                        readonly>
             </div>

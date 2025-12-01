@@ -23,13 +23,20 @@ class BahanBaku extends Model
 
     public function updateStatus()
     {
-        if ($this->stok <= 0) {
-            $this->status = 'Habis';
-        } elseif ($this->stok <= 10) {
-            $this->status = 'Menipis';
+        $stokTerbaru = $this->stokHarian()->latest('tanggal')->value('stok_akhir');
+
+        if ($stokTerbaru === null) {
+            $this->status = 'Belum Ada Stok';
+        } elseif ($stokTerbaru <= $this->batas_merah) {
+            $this->status = 'Merah'; // Habis
+        } elseif ($stokTerbaru <= $this->batas_kuning) {
+            $this->status = 'Kuning'; // Menipis
         } else {
-            $this->status = 'Aman';
+            $this->status = 'Hijau'; // Aman
         }
+
+        $this->save();
     }
+
 
 }

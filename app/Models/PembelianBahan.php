@@ -29,8 +29,8 @@ class PembelianBahan extends Model
     }
 
     // relasi ke detail pembelian (kalau nanti mau ditambah)
-    public function detail()
+    public function detailPembelian()
     {
-        return $this->hasMany(PembelianDetail::class, 'pembelian_id');
+        return $this->hasMany(DetailPembelianBahan::class, 'pembelian_bahan_id', 'id');
     }
 }

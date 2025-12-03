@@ -100,17 +100,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('pembelian', PembelianBahanController::class);
     Route::resource('detail-pembelian', DetailPembelianBahanController::class);
     Route::resource('stokharian', StokHarianController::class);
-
-    // Keuangan
-    Route::get('/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran');
-    Route::get('/keuangan/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan');
-    Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
-    Route::get('/keuangan/create', [KeuanganController::class, 'create'])->name('keuangan.create');
-    Route::post('/keuangan', [KeuanganController::class, 'store'])->name('keuangan.store');
-    Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])->name('keuangan.exportPengeluaran');
+    Route::get('/keuangan', [KeuanganController::class, 'index'])
+        ->name('keuangan.index');
+    Route::get('/keuangan/create', [KeuanganController::class, 'create'])
+        ->name('keuangan.create');
+    Route::post('/keuangan', [KeuanganController::class, 'store'])
+        ->name('keuangan.store');
+    Route::delete('/keuangan/{keuangan}', [KeuanganController::class, 'destroy'])
+        ->name('keuangan.destroy');
+    Route::get('/keuangan/pendapatan', [KeuanganController::class, 'pendapatan'])
+        ->name('pendapatan.index');
+    Route::get('/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
+        ->name('pengeluaran.index');
+    Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])
+        ->name('keuangan.laporan');
+    Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])
+        ->name('keuangan.exportPengeluaran');
 });
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -150,30 +156,22 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pesanan', PesananController::class);
 });
 
-
-
-/*
-|--------------------------------------------------------------------------
-| LOGOUT
-|--------------------------------------------------------------------------
-*/
-
 Route::post('/logout', function () {
     Auth::logout();
     return redirect()->route('login');
 })->name('logout');
 
 
-Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
-Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
-Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
-Route::get('/admin/keuangan/laporan', [KeuanganController::class, 'laporan'])
-    ->name('keuangan.laporan');
-Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
-    ->name('keuangan.pengeluaran');
-Route::get('/keuangan/create', [KeuanganController::class, 'create'])
-    ->name('keuangan.create')
-    ->middleware('admin');
+// Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
+// Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
+// Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
+// Route::get('/admin/keuangan/laporan', [KeuanganController::class, 'laporan'])
+//     ->name('keuangan.laporan');
+// Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
+//     ->name('keuangan.pengeluaran');
+// Route::get('/keuangan/create', [KeuanganController::class, 'create'])
+//     ->name('keuangan.create')
+//     ->middleware('admin');
 
 
 // Bahan baku

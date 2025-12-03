@@ -4,23 +4,10 @@
 <div class="container mt-4">
 
     <h4>Tambah Pembelian Bahan</h4>
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-            @endif
 
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
-
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     <form action="{{ route('pembelian.store') }}" method="POST">
         @csrf
@@ -33,12 +20,11 @@
                     <input type="date" name="tanggal" class="form-control" required>
                 </div>
 
-                {{-- Supplier --}}
                 <div class="mb-3">
                     <label>Pilih Supplier</label>
                     <select name="supplier_id" class="form-control">
                         <option value="">-- Pilih Supplier --</option>
-                        @foreach ($suppliers as $s)
+                        @foreach($suppliers as $s)
                             <option value="{{ $s->id }}">{{ $s->nama_supplier }}</option>
                         @endforeach
                     </select>
@@ -59,6 +45,7 @@
                             <th>Bahan Baru</th>
                             <th>Qty</th>
                             <th>Harga Satuan</th>
+                            <th>Satuan</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -86,12 +73,16 @@
                             <td>
                                 <input type="number" name="harga_satuan[]" class="form-control" required min="0">
                             </td>
-                            <select name="satuan[]" class="form-control" required>
-                                <option value="pcs">pcs</option>
-                                <option value="kg">kg</option>
-                                <option value="gram">gram</option>
-                                <option value="liter">liter</option>
-                            </select>
+
+                            <td>
+                                <select name="satuan[]" class="form-control" required>
+                                    <option value="pcs">pcs</option>
+                                    <option value="kg">kg</option>
+                                    <option value="gram">gram</option>
+                                    <option value="liter">liter</option>
+                                </select>
+                            </td>
+
                             <td>
                                 <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
                             </td>
@@ -112,39 +103,58 @@
     </form>
 </div>
 
+{{-- ========================================= --}}
+{{-- JAVASCRIPT BARU YANG SUDAH DIFIX           --}}
+{{-- ========================================= --}}
 <script>
-    document.getElementById('addRow').addEventListener('click', function () {
-        const row = `
-        <tr>
-            <td>
-                <select name="bahan_id[]" class="form-control">
-                    <option value="">-- Pilih Bahan --</option>
-                    @foreach ($bahan as $b)
-                        <option value="{{ $b->id }}">{{ $b->nama_bahan }}</option>
-                    @endforeach
-                </select>
-            </td>
+document.getElementById('addRow').addEventListener('click', function () {
+    const row = `
+    <tr>
+        <td>
+            <select name="bahan_id[]" class="form-control">
+                <option value="">-- Pilih Bahan --</option>
+                @foreach ($bahan as $b)
+                    <option value="{{ $b->id }}">{{ $b->nama_bahan }}</option>
+                @endforeach
+            </select>
+        </td>
 
-            <td>
-                <input type="text" name="bahan_baru[]" class="form-control" placeholder="Isi jika bahan baru">
-            </td>
+        <td>
+            <input type="text" name="bahan_baru[]" class="form-control" placeholder="Isi jika bahan baru">
+        </td>
 
-            <td><input type="number" name="qty[]" class="form-control" min="1"></td>
-            <td><input type="number" name="harga_satuan[]" class="form-control" min="0"></td>
+        <td>
+            <input type="number" name="qty[]" class="form-control" min="1" required>
+        </td>
 
-            <td>
-                <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
-            </td>
-        </tr>`;
+        <td>
+            <input type="number" name="harga_satuan[]" class="form-control" min="0" required>
+        </td>
 
-        document.querySelector("#tableBahan tbody").insertAdjacentHTML('beforeend', row);
-    });
+        <td>
+            <select name="satuan[]" class="form-control" required>
+                <option value="pcs">pcs</option>
+                <option value="kg">kg</option>
+                <option value="gram">gram</option>
+                <option value="liter">liter</option>
+            </select>
+        </td>
 
-    document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('removeRow')) {
-            e.target.closest('tr').remove();
-        }
-    });
+        <td>
+            <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
+        </td>
+    </tr>
+    `;
+
+    document.querySelector("#tableBahan tbody").insertAdjacentHTML('beforeend', row);
+});
+
+// Hapus baris
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('removeRow')) {
+        e.target.closest('tr').remove();
+    }
+});
 </script>
 
 @endsection

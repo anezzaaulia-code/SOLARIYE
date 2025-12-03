@@ -31,30 +31,58 @@ class PesananController extends Controller
 
     public function store(Request $request, $returnObject = false)
     {
-        $pesanan = Pesanan::create([
-            'pelanggan'  => $request->pelanggan,
-            'nomor_wa'   => $request->nomor_wa,
-            'kasir_id'   => $request->kasir_id,
-            'kasir_nama' => $request->kasir_nama,
-            'metode'     => $request->metode,
-            'bayar'      => $request->bayar,
-            'total'      => collect($request->items)->sum(fn($i) => $i['harga'] * $i['qty']),
-        ]);
+        DB::beginTransaction();
 
-        foreach ($request->items as $i) {
-            $pesanan->detail()->create([
-                'menu_id' => $i['id'],
-                'nama'    => $i['nama'],
-                'harga'   => $i['harga'],
-                'qty'     => $i['qty']
+        try {
+            // Hitung total pesanan
+            $total = collect($request->items)->sum(fn($i) => $i['harga'] * $i['qty']);
+
+            // Simpan pesanan
+            $pesanan = Pesanan::create([
+                'pelanggan'   => $request->pelanggan,
+                'nomor_wa'    => $request->nomor_wa,
+                'kasir_id'    => $request->kasir_id,
+                'kasir_nama'  => $request->kasir_nama,
+                'metode_bayar'=> $request->metode,
+                'bayar'       => $request->bayar,
+                'total_harga' => $total,
+                'status'      => 'menunggu',
             ]);
+
+            // Simpan detail pesanan
+            foreach ($request->items as $i) {
+                $pesanan->detail()->create([
+                    'menu_id' => $i['id'],
+                    'nama'    => $i['nama'],
+                    'harga'   => $i['harga'],
+                    'qty'     => $i['qty']
+                ]);
+            }
+
+            // ====== CATAT PEMASUKAN KE TABEL KEUANGAN ======
+            Keuangan::create([
+                'tanggal'    => now()->format('Y-m-d'),
+                'jenis'      => 'pemasukan',
+                'sumber'     => 'penjualan',
+                'nominal'    => $total,
+                'keterangan' => 'Penjualan #' . $pesanan->id . ' oleh ' . $pesanan->kasir_nama,
+                'ref_id'     => $pesanan->id,
+                'ref_table'  => 'pesanan',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            if ($returnObject) return $pesanan;
+
+            return redirect()->route('pesanan.index')
+                ->with('success', 'Pesanan berhasil dibuat');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
         }
-
-        if ($returnObject) return $pesanan;
-
-        return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil dibuat');
     }
-
 
     public function show(Pesanan $pesanan)
     {

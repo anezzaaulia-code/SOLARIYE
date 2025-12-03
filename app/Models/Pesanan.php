@@ -31,6 +31,13 @@ class Pesanan extends Model
 
     public function keuangan()
     {
-        return $this->hasOne(Keuangan::class, 'ref_id')->where('ref_table', 'pesanan');
+        return $this->hasOne(Keuangan::class, 'ref_id')
+                    ->where('ref_table', 'pesanan');
     }
+
+    public function getTotalAttribute()
+    {
+        return $this->detail->sum('subtotal');
+    }
+
 }

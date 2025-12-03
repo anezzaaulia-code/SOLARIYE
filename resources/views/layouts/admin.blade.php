@@ -96,11 +96,11 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white d-flex justify-content-between align-items-center" 
-                data-bs-toggle="collapse" 
-                href="#submenuKeuangan" 
-                role="button" 
-                aria-expanded="false" 
+                <a class="nav-link text-white d-flex justify-content-between align-items-center"
+                data-bs-toggle="collapse"
+                href="#submenuKeuangan"
+                role="button"
+                aria-expanded="false"
                 aria-controls="submenuKeuangan">
                     <div>
                         <i class="bi bi-cash-stack"></i>
@@ -113,14 +113,14 @@
                     <ul class="nav flex-column">
 
                         <li>
-                            <a href="{{ route('pendapatan') }}" class="nav-link text-white">
+                            <a href="{{ route('pendapatan.index') }}" class="nav-link text-white">
                                 <i class="bi bi-coin"></i>
                                 Pendapatan
                             </a>
                         </li>
 
                         <li>
-                            <a href="{{ route('pengeluaran') }}" class="nav-link text-white">
+                            <a href="{{ route('pengeluaran.index') }}" class="nav-link text-white">
                                 <i class="bi bi-receipt-cutoff"></i>
                                 Pengeluaran
                             </a>

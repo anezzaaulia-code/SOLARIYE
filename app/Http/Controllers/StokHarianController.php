@@ -11,16 +11,15 @@ class StokHarianController extends Controller
     public function index()
     {
         $stokharian = StokHarian::with('bahan')
-            ->orderBy('tanggal','desc')
+            ->orderBy('tanggal', 'desc')
             ->get();
 
         return view('admin.stokharian.index', compact('stokharian'));
     }
 
-        public function create()
+    public function create()
     {
-        $bahan = BahanBaku::all(); // untuk dropdown pilih bahan
-
+        $bahan = BahanBaku::all();
         return view('admin.stokharian.create', compact('bahan'));
     }
 
@@ -28,17 +27,15 @@ class StokHarianController extends Controller
     {
         $stok = StokHarian::findOrFail($id);
         $bahan = BahanBaku::all();
-
         return view('admin.stokharian.edit', compact('stok', 'bahan'));
     }
 
-
     public function store(Request $request)
     {
-        dd('MASUK STORE');
         $request->validate([
             'bahan_id' => 'required|exists:bahan_baku,id',
-            'tanggal' => 'required|date',
+            'tanggal'  => 'required|date',
+            'stok_akhir' => 'required|numeric|min:0',
         ]);
 
         $bahan = BahanBaku::findOrFail($request->bahan_id);
@@ -48,11 +45,14 @@ class StokHarianController extends Controller
             ->orderBy('tanggal', 'desc')
             ->value('stok_akhir');
 
-        // Jika belum ada stok harian sebelumnya
-        $stok_awal = $stokTerakhir ?? 0;
-        $stok_akhir = $stok_awal; // belum ada pemakaian/penambahan karena harian baru
+        // Stok awal = stok akhir sebelumnya, jika tidak ada, ambil stok dari tabel bahan
+        $stok_awal = $stokTerakhir ?? $bahan->stok;
+        $stok_akhir = $request->stok_akhir;
 
-        // Tentukan status warna berdasarkan stok akhir
+        // Hitung pemakaian
+        $pemakaian = $stok_awal - $stok_akhir;
+
+        // Tentukan status
         if ($stok_akhir <= 0) {
             $status = 'habis';
         } elseif ($stok_akhir <= $bahan->batas_merah) {
@@ -61,19 +61,71 @@ class StokHarianController extends Controller
             $status = 'aman';
         }
 
+        // Simpan stok harian
         StokHarian::updateOrCreate(
             [
                 'bahan_id' => $request->bahan_id,
                 'tanggal'  => $request->tanggal
             ],
             [
-                'stok_awal'    => $stok_awal,
-                'stok_akhir'   => $stok_akhir,
-                'status_warna' => $status
+                'stok_awal'  => $stok_awal,
+                'stok_akhir' => $stok_akhir,
+                'pemakaian'  => $pemakaian,
+                'status_warna'     => $status
             ]
         );
 
-        return back()->with('success', 'Stok harian berhasil dicatat.');
+        // Update stok terbaru pada tabel bahan
+        $bahan->update([
+            'stok' => $stok_akhir
+        ]);
+
+        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil dicatat.');
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'stok_akhir' => 'required|numeric|min:0',
+        ]);
+
+        $stok = StokHarian::findOrFail($id);
+        $bahan = BahanBaku::findOrFail($stok->bahan_id);
+
+        $stok_akhir = $request->stok_akhir;
+
+        // Hitung pemakaian: stok awal tidak berubah
+        $pemakaian = $stok->stok_awal - $stok_akhir;
+
+        // Tentukan status
+        if ($stok_akhir <= 0) {
+            $status = 'habis';
+        } elseif ($stok_akhir <= $bahan->batas_merah) {
+            $status = 'menipis';
+        } else {
+            $status = 'aman';
+        }
+
+        // Update stok harian
+        $stok->update([
+            'stok_akhir' => $stok_akhir,
+            'pemakaian'  => $pemakaian,
+            'status_warna'     => $status
+        ]);
+
+        // Update stok pada tabel bahan
+        $bahan->update([
+            'stok' => $stok_akhir
+        ]);
+
+        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil diperbarui.');
+    }
+
+    public function destroy($id)
+    {
+        $stok = StokHarian::findOrFail($id);
+        $stok->delete();
+
+        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil dihapus.');
+    }
 }

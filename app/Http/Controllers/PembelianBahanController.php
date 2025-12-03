@@ -7,6 +7,7 @@ use App\Models\Supplier;
 use App\Models\DetailPembelianBahan;
 use App\Models\BahanBaku;
 use App\Models\StokHarian;
+use App\Models\Keuangan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -21,7 +22,7 @@ class PembelianBahanController extends Controller
     public function index()
     {
         $pembelian = PembelianBahan::with('supplier')
-            ->orderBy('tanggal','desc')
+            ->orderBy('tanggal', 'desc')
             ->get();
 
         return view('admin.pembelian.index', compact('pembelian'));
@@ -32,26 +33,26 @@ class PembelianBahanController extends Controller
     {
         $suppliers = Supplier::all();
         $bahan = BahanBaku::all();
-
         return view('admin.pembelian.create', compact('suppliers', 'bahan'));
     }
 
-    // STORE API
+    // ==============================
+    // STORE
+    // ==============================
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'supplier_id' => 'nullable|exists:suppliers,id', // FIXED
-            'bahan_id' => 'required|array',
-            'qty' => 'required|array',
-            'harga_satuan' => 'required|array',
+            'tanggal'       => 'required|date',
+            'supplier_id'   => 'nullable|exists:suppliers,id',
+            'bahan_id'      => 'required|array',
+            'qty'           => 'required|array',
+            'harga_satuan'  => 'required|array',
         ]);
 
         DB::beginTransaction();
 
         try {
-
-            // ====== SUPPLIER BARU ======
+            // Supplier Baru vs Lama
             if ($request->supplier_baru) {
                 $supplier = Supplier::create([
                     'nama_supplier' => $request->supplier_baru
@@ -61,47 +62,56 @@ class PembelianBahanController extends Controller
                 $supplierId = $request->supplier_id;
             }
 
-            // ====== SIMPAN HEADER ======
+            // HEADER PEMBELIAN
             $pembelian = PembelianBahan::create([
-                'tanggal' => $request->tanggal,
+                'tanggal'     => $request->tanggal,
                 'supplier_id' => $supplierId,
                 'total_harga' => 0,
-                'created_by' => auth()->id(),
+                'created_by'  => auth()->id(),
             ]);
 
             $total = 0;
 
-            // ====== LOOP DETAIL ======
+            // ======================
+            // LOOP DETAIL — FIX SAFE
+            // ======================
             foreach ($request->bahan_id as $i => $bahanId) {
 
-                // Skip jika baris kosong
-                if (!$bahanId && !$request->bahan_baru[$i]) continue;
+                // AMANKAN INDEX ARRAY (FIX utama undefined array key)
+                $bahanBaru   = $request->bahan_baru[$i]     ?? null;
+                $qty         = $request->qty[$i]            ?? null;
+                $harga       = $request->harga_satuan[$i]   ?? null;
+                $satuan      = $request->satuan[$i]         ?? null;
 
-                // ====== BAHAN BARU =======
-                if (!$bahanId && $request->bahan_baru[$i]) {
-                $newBahan = BahanBaku::create([
-                'nama_bahan'   => $request->bahan_baru[$i],
-                'stok'         => 0,
-                'batas_merah'  => 5,
-                'satuan'       => $request->satuan[$i],
-            ]);
+                // Skip baris kosong
+                if ((!$bahanId && !$bahanBaru) || !$qty || !$harga) {
+                    continue;
+                }
+
+                // Jika bahan baru
+                if (!$bahanId && $bahanBaru) {
+                    $newBahan = BahanBaku::create([
+                        'nama_bahan' => $bahanBaru,
+                        'stok'       => 0,
+                        'batas_merah' => 5,
+                        'satuan'     => $satuan,
+                    ]);
 
                     $bahanId = $newBahan->id;
                 }
 
-                $qty = $request->qty[$i];
-                $harga = $request->harga_satuan[$i];
+                // Insert detail pembelian
                 $subtotal = $qty * $harga;
 
                 DetailPembelianBahan::create([
                     'pembelian_bahan_id' => $pembelian->id,
-                    'bahan_id' => $bahanId,
-                    'qty' => $qty,
-                    'harga_satuan' => $harga,
-                    'subtotal' => $subtotal,
+                    'bahan_id'           => $bahanId,
+                    'qty'                => $qty,
+                    'harga_satuan'       => $harga,
+                    'subtotal'           => $subtotal,
                 ]);
 
-                // Update stok
+                // Update stok bahan
                 $bahan = BahanBaku::find($bahanId);
                 $bahan->stok += $qty;
                 $bahan->save();
@@ -111,46 +121,56 @@ class PembelianBahanController extends Controller
                     ->where('tanggal', $request->tanggal)
                     ->first();
 
-                $stok_awal = $stok ? $stok->stok_awal : $bahan->stok - $qty;
+                $stok_awal  = $stok ? $stok->stok_awal : ($bahan->stok - $qty);
                 $stok_akhir = $bahan->stok;
 
-                if ($stok_akhir <= 0) {
-                    $warna = 'habis';
-                } elseif ($stok_akhir <= $bahan->batas_merah) {
-                    $warna = 'menipis';
-                } else {
-                    $warna = 'aman';
-                }
+                $status_warna = $stok_akhir <= 0 ? 'habis'
+                              : ($stok_akhir <= $bahan->batas_merah ? 'menipis' : 'aman');
 
                 StokHarian::updateOrCreate(
                     ['bahan_id' => $bahanId, 'tanggal' => $request->tanggal],
                     [
-                        'stok_awal' => $stok_awal,
-                        'stok_akhir' => $stok_akhir,
-                        'status_warna' => $warna
+                        'stok_awal'    => $stok_awal,
+                        'stok_akhir'   => $stok_akhir,
+                        'pemakaian'    => $stok_awal - $stok_akhir,
+                        'status_warna' => $status_warna
                     ]
                 );
 
                 $total += $subtotal;
             }
 
-            // UPDATE TOTAL
+            // UPDATE TOTAL KE HEADER
             $pembelian->update(['total_harga' => $total]);
+
+            // ===========================
+            // CATAT KEUANGAN OTOMATIS
+            // ===========================
+            Keuangan::create([
+                'tanggal'    => $request->tanggal,
+                'jenis'      => 'pengeluaran',
+                'sumber'     => 'suppliers',
+                'nominal'    => $total,
+                'keterangan' => 'Pembelian dari ' . ($pembelian->supplier->nama_supplier ?? 'Supplier'),
+                'ref_id'     => $pembelian->id,
+                'ref_table'  => 'pembelian',
+                'created_by' => auth()->id(),
+            ]);
 
             DB::commit();
 
-            return redirect()
-                ->route('pembelian.index')
+            return redirect()->route('pembelian.index')
                 ->with('success', 'Pembelian berhasil disimpan.');
 
         } catch (\Throwable $e) {
-
             DB::rollBack();
             return back()->with('error', 'Gagal menyimpan pembelian: ' . $e->getMessage());
         }
     }
 
+    // ==============================
     // SHOW
+    // ==============================
     public function show($id)
     {
         $pembelian = PembelianBahan::with(['supplier', 'detailPembelian.bahan'])
@@ -159,7 +179,9 @@ class PembelianBahanController extends Controller
         return view('admin.pembelian.show', compact('pembelian'));
     }
 
+    // ==============================
     // EDIT
+    // ==============================
     public function edit(PembelianBahan $pembelian)
     {
         $suppliers = Supplier::all();
@@ -169,53 +191,56 @@ class PembelianBahanController extends Controller
         return view('admin.pembelian.edit', compact('pembelian', 'suppliers', 'bahan', 'detail'));
     }
 
+    // ==============================
     // UPDATE
+    // ==============================
     public function update(Request $request, PembelianBahan $pembelian)
     {
         $request->validate([
-            'tanggal' => 'required|date',
-            'supplier_id' => 'required|exists:suppliers,id', // FIXED
-            'bahan_id' => 'required|array',
-            'qty' => 'required|array',
+            'tanggal'      => 'required|date',
+            'supplier_id'  => 'required|exists:suppliers,id',
+            'bahan_id'     => 'required|array',
+            'qty'          => 'required|array',
             'harga_satuan' => 'required|array',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // KEMBALIKAN STOK LAMA
+            // Kembalikan stok lama
             foreach ($pembelian->detailPembelian as $detail) {
                 $bahan = BahanBaku::find($detail->bahan_id);
                 $bahan->stok -= $detail->qty;
                 $bahan->save();
             }
 
-            // HAPUS DETAIL LAMA
+            // Hapus detail lama
             $pembelian->detailPembelian()->delete();
 
-            // UPDATE HEADER
+            // Update header
             $pembelian->update([
-                'tanggal' => $request->tanggal,
+                'tanggal'     => $request->tanggal,
                 'supplier_id' => $request->supplier_id,
             ]);
 
             $total = 0;
 
-            // SIMPAN ULANG DETAIL
+            // Loop detail baru (SAFE)
             foreach ($request->bahan_id as $i => $bahanId) {
 
-                if (!$bahanId) continue;
+                $qty   = $request->qty[$i] ?? null;
+                $harga = $request->harga_satuan[$i] ?? null;
 
-                $qty = $request->qty[$i];
-                $harga = $request->harga_satuan[$i];
+                if (!$bahanId || !$qty || !$harga) continue;
+
                 $subtotal = $qty * $harga;
 
                 DetailPembelianBahan::create([
                     'pembelian_bahan_id' => $pembelian->id,
-                    'bahan_id' => $bahanId,
-                    'qty' => $qty,
-                    'harga_satuan' => $harga,
-                    'subtotal' => $subtotal,
+                    'bahan_id'           => $bahanId,
+                    'qty'                => $qty,
+                    'harga_satuan'       => $harga,
+                    'subtotal'           => $subtotal,
                 ]);
 
                 $bahan = BahanBaku::find($bahanId);
@@ -225,7 +250,21 @@ class PembelianBahanController extends Controller
                 $total += $subtotal;
             }
 
+            // Update total pembelian
             $pembelian->update(['total_harga' => $total]);
+
+            // Update Catatan Keuangan
+            $keu = Keuangan::where('ref_id', $pembelian->id)
+                ->where('ref_table', 'pembelian')
+                ->first();
+
+            if ($keu) {
+                $keu->update([
+                    'tanggal'    => $request->tanggal,
+                    'nominal'    => $total,
+                    'keterangan' => 'Update pembelian dari ' . ($pembelian->supplier->nama_supplier ?? 'Supplier'),
+                ]);
+            }
 
             DB::commit();
 
@@ -233,16 +272,31 @@ class PembelianBahanController extends Controller
                 ->with('success', 'Pembelian berhasil diperbarui.');
 
         } catch (\Throwable $e) {
-
             DB::rollBack();
             return back()->with('error', 'Gagal memperbarui pembelian: ' . $e->getMessage());
         }
     }
 
+    // ==============================
     // DELETE
+    // ==============================
     public function destroy(PembelianBahan $pembelian)
     {
-        DB::transaction(function() use ($pembelian) {
+        DB::transaction(function () use ($pembelian) {
+
+            // Hapus catatan keuangan
+            Keuangan::where('ref_id', $pembelian->id)
+                ->where('ref_table', 'pembelian')
+                ->delete();
+
+            // Kembalikan stok
+            foreach ($pembelian->detailPembelian as $detail) {
+                $bahan = BahanBaku::find($detail->bahan_id);
+                $bahan->stok -= $detail->qty;
+                $bahan->save();
+            }
+
+            // Hapus detail & header
             $pembelian->detailPembelian()->delete();
             $pembelian->delete();
         });

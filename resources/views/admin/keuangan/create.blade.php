@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container">
@@ -22,10 +22,14 @@
             <input type="number" name="nominal" class="form-control" required>
         </div>
 
+        {{-- Jika pengeluaran: pilih sumber --}}
         @if($jenis == 'pengeluaran')
             <div class="mb-3">
                 <label>Sumber</label>
-                <input type="text" name="sumber" class="form-control">
+                <select name="sumber" class="form-control" required>
+                    <option value="suppliers">Supplier</option>
+                    <option value="lainnya">Lainnya</option>
+                </select>
             </div>
         @endif
 
@@ -35,8 +39,10 @@
         </div>
 
         <button type="submit" class="btn btn-success">Simpan</button>
+
         <a href="{{ $jenis == 'pengeluaran' ? route('pengeluaran.index') : route('pendapatan.index') }}"
-            class="btn btn-secondary">Kembali</a>
+           class="btn btn-secondary">Kembali</a>
+
     </form>
 
 </div>

@@ -33,4 +33,10 @@ class PembelianBahan extends Model
     {
         return $this->hasMany(DetailPembelianBahan::class, 'pembelian_bahan_id', 'id');
     }
+
+    public function keuangan()
+    {
+        return $this->hasOne(Keuangan::class, 'ref_id')
+                    ->where('ref_table', 'pembelian');
+    }
 }

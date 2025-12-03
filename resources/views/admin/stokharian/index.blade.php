@@ -10,6 +10,12 @@
     </div>
 
     <div class="card-body">
+
+        {{-- Notif sukses --}}
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
         <table class="table table-striped text-center">
             <thead>
                 <tr>
@@ -27,9 +33,13 @@
                 @foreach ($stokharian as $item)
                 @php
                     $pemakaian = $item->stok_awal - $item->stok_akhir;
-                    $warna = 'success';
-                    if ($item->stok_akhir <= 3) $warna = 'danger';
-                    else if ($item->stok_akhir <= 5) $warna = 'warning';
+
+                    // Badge warna sesuai status database
+                    $badge = match ($item->status_warna) {
+                        'habis' => 'danger',
+                        'menipis' => 'warning',
+                        default => 'success'
+                    };
                 @endphp
 
                 <tr>
@@ -39,14 +49,22 @@
                     <td>{{ $item->stok_akhir }} {{ $item->bahan->satuan }}</td>
                     <td>{{ $pemakaian }} {{ $item->bahan->satuan }}</td>
                     <td>
-                        <span class="badge bg-{{ $warna }}">
-                            {{ ucfirst($warna) }}
+                        <span class="badge bg-{{ $badge }}">
+                            {{ ucfirst($item->status_warna) }}
                         </span>
                     </td>
                     <td>
                         <a href="{{ route('stokharian.edit', $item->id) }}" class="btn btn-warning btn-sm">
                             <i class="bi bi-pencil"></i>
                         </a>
+
+                        <form action="{{ route('stokharian.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data ini?')" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 @endforeach

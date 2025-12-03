@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
@@ -21,36 +21,49 @@ class KeuanganController extends Controller
     // FORM INPUT
     public function create(Request $request)
     {
-        // jenis bisa: pemasukan / pengeluaran
-        $jenis = $request->jenis ?? null;
-
+        $jenis = $request->jenis ?? null; // pemasukan / pengeluaran
         return view('admin.keuangan.create', compact('jenis'));
     }
 
+    // SIMPAN DATA KEUANGAN
     public function store(Request $request)
     {
         $request->validate([
-            'jenis' => 'required|in:pemasukan,pengeluaran',
-            'tanggal' => 'required|date',
-            'nominal' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string',
-            'sumber' => 'nullable|string',
+            'jenis'      => 'required|in:pemasukan,pengeluaran',
+            'tanggal'    => 'required|date',
+            'nominal'    => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:255',
+            'sumber'     => 'nullable|string'
         ]);
 
+        // tentukan sumber berdasarkan jenis transaksi
+        if ($request->jenis === 'pemasukan') {
+            // pemasukan selalu dari penjualan
+            $sumber = 'penjualan';
+        } else {
+            // pengeluaran → sumber harus sesuai enum di tabel
+            $sumber = in_array($request->sumber, ['suppliers', 'lainnya'])
+                ? $request->sumber
+                : 'lainnya';
+        }
+
         Keuangan::create([
-            'jenis' => $request->jenis,
-            'tanggal' => $request->tanggal,
-            'nominal' => $request->nominal,
+            'tanggal'    => $request->tanggal,
+            'jenis'      => $request->jenis,
+            'sumber'     => $sumber,               // FIX ENUM 100%
+            'nominal'    => $request->nominal,
             'keterangan' => $request->keterangan,
-            'sumber' => $request->sumber,
+            'ref_id'     => null,
+            'ref_table'  => 'none',
+            'created_by' => auth()->id(),
         ]);
 
         return redirect()->route(
-            $request->jenis === 'pengeluaran' 
-                ? 'pengeluaran.index' 
+            $request->jenis === 'pengeluaran'
+                ? 'pengeluaran.index'
                 : 'pendapatan.index'
         )->with('success', 'Data keuangan berhasil ditambahkan.');
-        }  // <-- ini yang kurang!
+    }
 
     // PENDAPATAN
     public function pendapatan(Request $request)
@@ -95,11 +108,11 @@ class KeuanganController extends Controller
     public function laporan(Request $request)
     {
         $from = $request->from ?? now()->startOfMonth()->toDateString();
-        $to = $request->to ?? now()->endOfMonth()->toDateString();
+        $to   = $request->to   ?? now()->endOfMonth()->toDateString();
 
-        $pendapatan = Keuangan::where('jenis','pemasukan')->whereBetween('tanggal',[$from,$to])->sum('nominal');
+        $pendapatan  = Keuangan::where('jenis','pemasukan')->whereBetween('tanggal',[$from,$to])->sum('nominal');
         $pengeluaran = Keuangan::where('jenis','pengeluaran')->whereBetween('tanggal',[$from,$to])->sum('nominal');
-        $list = Keuangan::whereBetween('tanggal',[$from,$to])->orderBy('tanggal','desc')->get();
+        $list        = Keuangan::whereBetween('tanggal',[$from,$to])->orderBy('tanggal','desc')->get();
 
         return view('admin.keuangan.laporan', compact('from','to','pendapatan','pengeluaran','list'));
     }
@@ -121,9 +134,9 @@ class KeuanganController extends Controller
     public function labaRugi(Request $request)
     {
         $from = $request->from ?? now()->startOfMonth()->toDateString();
-        $to = $request->to ?? now()->toDateString();
+        $to   = $request->to   ?? now()->toDateString();
 
-        $pemasukan = Keuangan::where('jenis', 'pemasukan')->whereBetween('tanggal', [$from, $to])->sum('nominal');
+        $pemasukan  = Keuangan::where('jenis', 'pemasukan')->whereBetween('tanggal', [$from, $to])->sum('nominal');
         $pengeluaran = Keuangan::where('jenis', 'pengeluaran')->whereBetween('tanggal', [$from, $to])->sum('nominal');
 
         return view('admin.keuangan.labarugi', compact('from','to','pemasukan','pengeluaran'));
@@ -140,7 +153,7 @@ class KeuanganController extends Controller
         $data = $q->orderBy('tanggal','desc')->get();
 
         return response()->json([
-            'status' => 'ok',
+            'status'   => 'ok',
             'exported' => $data
         ]);
     }

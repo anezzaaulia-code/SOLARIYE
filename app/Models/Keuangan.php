@@ -27,13 +27,17 @@ class Keuangan extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // relasi dinamis
-    public function referensi()
+    // Relasi khusus pembelian
+    public function pembelian()
     {
-        return match ($this->ref_table) {
-            'pesanan'   => $this->belongsTo(Pesanan::class, 'ref_id'),
-            'pembelian' => $this->belongsTo(PembelianBahan::class, 'ref_id'),
-            default     => null,
-        };
+        return $this->belongsTo(PembelianBahan::class, 'ref_id')
+                    ->where('ref_table', 'pembelian');
+    }
+
+    // Relasi khusus pesanan (opsional)
+    public function pesanan()
+    {
+        return $this->belongsTo(Pesanan::class, 'ref_id')
+                    ->where('ref_table', 'pesanan');
     }
 }

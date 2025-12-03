@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin; // <--- UBAH INI
+use App\Http\Controllers\Controller;  // <--- TAMBAH INI
 
 use App\Models\Menu;
 use App\Models\KategoriMenu;

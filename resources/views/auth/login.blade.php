@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - SOLARIYE</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -14,6 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            /* Pastikan gambar clouds.jpg ada di public/storage/login/ */
             background: url('/storage/login/clouds.jpg') no-repeat center center fixed;
             background-size: cover;
         }
@@ -37,6 +38,7 @@
         .login-card input:focus {
             background: white;
             border-color: #6cb4ff;
+            outline: none;
         }
 
         .btn-login {
@@ -47,47 +49,17 @@
             border: none;
             color: #fff;
             font-weight: 600;
+            transition: 0.3s;
         }
 
         .btn-login:hover {
-            background-color: #000;
+            background-color: #333;
         }
 
-        .register-btn {
-            margin-top: 12px;
-            background: transparent;
-            border: 1px solid #000;
-            padding: 10px;
-            width: 100%;
-            border-radius: 12px;
-            font-weight: 600;
-            color: #000;
-            text-decoration: none;
-        }
-
-        .register-btn {
-            margin-top: 15px;
-            display: block;
-            text-align: center;
-        }
-
-        .header-icon {
-            width: 58px;
-            height: 58px;
-            border-radius: 14px;
-            background: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto 12px;
-            font-size: 22px;
-            color: #000;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-        }
-
-        .text-small {
-            font-size: 13px;
-            color: #444;
+        /* Pesan Error Login */
+        .alert-danger {
+            font-size: 14px;
+            border-radius: 10px;
         }
     </style>
 
@@ -98,30 +70,44 @@
         <div class="login-card">
 
             <div class="text-center mb-4">
-                <img src="/storage/logo.png" width="70">
+                {{-- Pastikan logo ada --}}
+                <img src="/storage/logo.png" width="70" onerror="this.style.display='none'">
             </div>
 
-            <h3 class="text-center mb-2">Sign in with email</h3>
-            <p class="text-center text-muted">Login to access menu management</p>
+            <h3 class="text-center mb-2">Welcome Back</h3>
+            <p class="text-center text-muted mb-4">Login to access POS System</p>
+
+            {{-- Tampilkan Error jika email/password salah --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0 ps-3">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
-                <label>Email</label>
-                <input type="email" name="email" class="form-control mb-3" required>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+                </div>
 
-                <label>Password</label>
-                <input type="password" name="password" class="form-control mb-3" required>
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
 
-                <button class="btn btn-dark w-100">Get Started</button>
+                <button class="btn btn-login">Sign In</button>
 
-                <a href="{{ route('register') }}" class="register-btn">Register</a>
+                {{-- TOMBOL REGISTER SUDAH DIHAPUS DEMI KEAMANAN --}}
             </form>
 
         </div>
     </div>
 
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </body>
 </html>

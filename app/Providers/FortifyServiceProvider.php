@@ -27,10 +27,10 @@ class FortifyServiceProvider extends ServiceProvider
         );
 
         // Register redirect
-        $this->app->singleton(
-            \Laravel\Fortify\Contracts\RegisterResponse::class,
-            \App\Actions\Fortify\RegisterResponse::class
-        );
+        // $this->app->singleton(
+        //     \Laravel\Fortify\Contracts\RegisterResponse::class,
+        //     \App\Actions\Fortify\RegisterResponse::class
+        // );
     }
 
     public function boot(): void
@@ -50,7 +50,7 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        Fortify::registerView(fn() => view('auth.register'));
+        // Fortify::registerView(fn() => view('auth.register'));
         Fortify::loginView(fn() => view('auth.login'));
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 
@@ -29,8 +30,7 @@ class BahanBakuController extends Controller
 
         BahanBaku::create($request->all());
 
-        return redirect()->route('bahanbaku.index')
-            ->with('success', 'Bahan baku berhasil ditambahkan');
+        return redirect()->route('bahanbaku.index')->with('success', 'Bahan baku berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -38,7 +38,6 @@ class BahanBakuController extends Controller
         $bahan = BahanBaku::findOrFail($id);
         return view('admin.bahanbaku.edit', compact('bahan'));
     }
-
 
     public function update(Request $request, BahanBaku $bahanbaku)
     {
@@ -51,14 +50,12 @@ class BahanBakuController extends Controller
 
         $bahanbaku->update($request->all());
 
-        return redirect()->route('bahanbaku.index')
-            ->with('success', 'Bahan baku berhasil diperbarui');
+        return redirect()->route('bahanbaku.index')->with('success', 'Bahan baku berhasil diperbarui');
     }
 
     public function destroy(BahanBaku $bahanbaku)
     {
         $bahanbaku->delete();
-        return redirect()->route('bahanbaku.index')
-            ->with('success', 'Bahan baku berhasil dihapus');
+        return redirect()->route('bahanbaku.index')->with('success', 'Bahan baku berhasil dihapus');
     }
 }

@@ -4,179 +4,118 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-
-use App\Http\Controllers\AuthController; // GANTI LoginController
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\POSController;
-use App\Http\Controllers\MenuController;
-use App\Http\Controllers\KategoriMenuController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\PembelianBahanController;
-use App\Http\Controllers\DetailPembelianBahanController;
-use App\Http\Controllers\StokHarianController;
-use App\Http\Controllers\PesananController;
-use App\Http\Controllers\KeuanganController;
+// --- 1. IMPORT CONTROLLER UMUM (Tetap di luar) ---
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\BahanBakuController;
-use App\Models\Menu;
+use App\Http\Controllers\PesananController; 
+// AuthController opsional, kalau pakai Breeze/Jetstream biasanya otomatis
 
+// --- 2. IMPORT CONTROLLER ADMIN (Namespace Baru) ---
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\KategoriMenuController;
+use App\Http\Controllers\Admin\BahanBakuController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\PembelianBahanController;
+use App\Http\Controllers\Admin\DetailPembelianBahanController;
+use App\Http\Controllers\Admin\StokHarianController;
+use App\Http\Controllers\Admin\KeuanganController;
 
-
-/*
-|--------------------------------------------------------------------------
-| LOGIN (GUEST)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('guest')->group(function () {
-
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
-
-    Route::post('/login', function (Request $request) {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->route('dashboard');
-        }
-
-        return back()->withErrors([
-            'email' => 'Email atau password salah.'
-        ]);
-    });
-});
-
-
+// --- 3. IMPORT CONTROLLER KASIR (Namespace Baru) ---
+use App\Http\Controllers\Kasir\POSController;
 
 
 /*
 |--------------------------------------------------------------------------
-| ROOT REDIRECT
+| AUTHENTICATION
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth']);
-
-Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
-
-
-
-/*
-|--------------------------------------------------------------------------
-| DASHBOARD (ADMIN + KASIR)
-|--------------------------------------------------------------------------
-*/
-
 Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () { 
+        // Redirect pintar: Admin ke Dashboard, Kasir ke POS
+        if(auth()->user()->role == 'kasir') return redirect()->route('kasir.pos');
+        return redirect()->route('dashboard'); 
+    });
+    
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('pesanan', PesananController::class);
 });
 
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/login');
+})->middleware('auth')->name('logout');
 
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN ONLY
+| DASHBOARD & UMUM
 |--------------------------------------------------------------------------
 */
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () { return redirect()->route('dashboard'); });
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Pesanan (Bisa diakses Admin untuk liat, Kasir untuk input)
+    // Controller ini ada di folder utama (App\Http\Controllers), bukan Admin/Kasir
+    Route::resource('pesanan', PesananController::class);
+});
 
-Route::middleware(['auth', 'admin'])->group(function () {
 
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+
+    // User Management
     Route::resource('users', UserController::class);
     Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::get('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 
-    Route::resource('kategori', KategoriMenuController::class);
+    // Master Data
+    Route::resource('kategori-menu', KategoriMenuController::class); 
     Route::resource('menu', MenuController::class);
+    Route::resource('bahanbaku', BahanBakuController::class); 
+
+    // Inventory & Supplier
     Route::resource('supplier', SupplierController::class);
     Route::resource('pembelian', PembelianBahanController::class);
     Route::resource('detail-pembelian', DetailPembelianBahanController::class);
     Route::resource('stokharian', StokHarianController::class);
 
-    // Keuangan
-    Route::get('/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran');
-    Route::get('/keuangan/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan');
-    Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
-    Route::get('/keuangan/create', [KeuanganController::class, 'create'])->name('keuangan.create');
-    Route::post('/keuangan', [KeuanganController::class, 'store'])->name('keuangan.store');
-    Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])->name('keuangan.exportPengeluaran');
+    // Keuangan (Custom Routes)
+    Route::prefix('keuangan')->name('keuangan.')->group(function () {
+        Route::get('/', [KeuanganController::class, 'index'])->name('index'); 
+        Route::get('/create', [KeuanganController::class, 'create'])->name('create');
+        Route::post('/store', [KeuanganController::class, 'store'])->name('store');
+        
+        Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan');
+        Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran');
+        Route::get('/laporan', [KeuanganController::class, 'laporan'])->name('laporan');
+        Route::get('/laba-rugi', [KeuanganController::class, 'labaRugi'])->name('labarugi');
+        
+        Route::get('/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])->name('exportPengeluaran');
+        
+        Route::delete('/{keuangan}', [KeuanganController::class, 'destroy'])->name('destroy');
+    });
 });
-
 
 
 /*
 |--------------------------------------------------------------------------
-| KASIR ONLY
+| KASIR ROUTES
 |--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth', 'kasir'])->prefix('kasir')->name('kasir.')->group(function () {
-
-    // Dashboard Kasir
-    Route::get('/dashboard', function () {
-        $menus = Menu::where('status', 'tersedia')->orderBy('nama')->get();
-        return view('kasir.dashboard.index', compact('menus'));
-    })->name('dashboard');
-
-    // POS
-    Route::get('/', [POSController::class, 'index'])->name('pos');
-    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    
+    // POS System
+    Route::get('/pos', [POSController::class, 'index'])->name('pos');
     Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');
+    Route::get('/pos/struk/{id}', [POSController::class, 'struk'])->name('pos.struk');
 
-    Route::post('/kasir/pos/store', [POSController::class, 'store'])
-    ->name('kasir.pos.store');
-
-    // Riwayat transaksi
+    // Riwayat
     Route::get('/riwayat', [POSController::class, 'riwayat'])->name('riwayat');
 });
-
-
-
-/*
-|--------------------------------------------------------------------------
-| PESANAN (ADMIN + KASIR)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth'])->group(function () {
-    Route::resource('pesanan', PesananController::class);
-});
-
-
-
-/*
-|--------------------------------------------------------------------------
-| LOGOUT
-|--------------------------------------------------------------------------
-*/
-
-Route::post('/logout', function () {
-    Auth::logout();
-    return redirect()->route('login');
-})->name('logout');
-
-
-Route::get('/pendapatan', [KeuanganController::class, 'pendapatan'])->name('pendapatan.index');
-Route::get('/pengeluaran', [KeuanganController::class, 'pengeluaran'])->name('pengeluaran.index');
-Route::get('/laporan-keuangan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
-Route::get('/admin/keuangan/laporan', [KeuanganController::class, 'laporan'])
-    ->name('keuangan.laporan');
-Route::get('/admin/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
-    ->name('keuangan.pengeluaran');
-Route::get('/keuangan/create', [KeuanganController::class, 'create'])
-    ->name('keuangan.create')
-    ->middleware('admin');
-
-
-// Bahan baku
-Route::resource('bahanbaku', BahanBakuController::class);
-
-Route::get('/register', [RegisterController::class, 'index'])->name('register');

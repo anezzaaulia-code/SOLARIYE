@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -10,13 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        // atau middleware admin kalau perlu
-        // $this->middleware('role:admin');
-    }
-
     public function index(Request $request)
     {
         $q = User::query();
@@ -39,17 +33,16 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama' => 'required|string|max:255',     // FIX
+            'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'required|in:admin,kasir',
         ]);
 
         $data['password'] = Hash::make($data['password']);
+        $data['status'] = 'aktif'; // Default status aktif
 
-        DB::transaction(function () use ($data) {
-            User::create($data);
-        });
+        User::create($data);
 
         return redirect()->route('users.index')->with('success', 'User berhasil dibuat.');
     }
@@ -62,7 +55,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'nama' => 'required|string|max:255', // FIX -> nama
+            'nama' => 'required|string|max:255',
             'email' => ['required','email', Rule::unique('users','email')->ignore($user->id)],
             'role' => 'required|in:admin,kasir',
             'status' => 'nullable|in:aktif,nonaktif'
@@ -73,7 +66,17 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success','User berhasil diupdate.');
     }
 
+    // --- BAGIAN YANG TADI HILANG (TOGGLE STATUS) ---
+    public function toggleStatus(User $user)
+    {
+        // Ubah status: Jika aktif jadi nonaktif, dan sebaliknya
+        $user->status = ($user->status === 'aktif') ? 'nonaktif' : 'aktif';
+        $user->save();
 
+        return back()->with('success', 'Status user berhasil diubah menjadi ' . $user->status);
+    }
+
+    // --- BAGIAN RESET PASSWORD ---
     public function resetPassword(Request $request, User $user)
     {
         $data = $request->validate([
@@ -84,14 +87,6 @@ class UserController extends Controller
         $user->save();
 
         return back()->with('success', 'Password berhasil direset.');
-    }
-
-    public function toggleStatus(User $user)
-    {
-        $user->status = ($user->status === 'aktif') ? 'nonaktif' : 'aktif';
-        $user->save();
-
-        return back()->with('success','Status user diubah.');
     }
 
     public function destroy(User $user)

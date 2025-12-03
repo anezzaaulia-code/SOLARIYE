@@ -35,8 +35,8 @@
         </div>
 
         <button type="submit" class="btn btn-success">Simpan</button>
-        <a href="{{ $jenis == 'pengeluaran' ? route('pengeluaran.index') : route('pendapatan.index') }}"
-            class="btn btn-secondary">Kembali</a>
+        <a href="{{ $jenis == 'pengeluaran' ? route('keuangan.pengeluaran') : route('keuangan.pendapatan') }}"
+    class="btn btn-secondary">Kembali</a>
     </form>
 
 </div>

@@ -56,8 +56,8 @@
                     <a href="{{ route('keuangan.create', ['jenis' => 'pengeluaran']) }}" class="btn btn-warning text-dark fw-bold px-4 py-2">
                         <i class="bi bi-plus-circle me-2"></i> Tambah Pengeluaran
                     </a>
-                    <a href="{{ route('keuangan.exportPengeluaran', request()->all()) }}" class="btn btn-outline-danger fw-bold px-4 py-2">
-                        <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                    <a href="{{ route('pengeluaran.export', request()->all()) }}" class="btn btn-outline-danger fw-bold px-4 py-2">
+                        <i class="bi bi-file-earmark-pdf me-2"></i> Cetak Laporan
                     </a>
                 </div>
             </div>
@@ -135,7 +135,7 @@
     function filterPengeluaran() {
         let from = document.getElementById('from').value;
         let to = document.getElementById('to').value;
-        
+
         // Memastikan parameter hanya ditambahkan jika ada nilainya
         let params = new URLSearchParams();
         if(from) params.append('from', from);

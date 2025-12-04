@@ -104,7 +104,7 @@
                         @forelse ($data as $row)
                         <tr>
                             <td class="text-center text-muted">{{ $loop->iteration + $data->firstItem() - 1 }}</td>
-                            
+
                             <td>
                                 <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($row->tanggal)->format('d M Y') }}</span>
                             </td>
@@ -145,7 +145,7 @@
                         </tr>
                         @endforelse
                     </tbody>
-                    
+
                     <tfoot class="bg-light fw-bold">
                         <tr>
                             <td colspan="4" class="text-end py-3 text-secondary text-uppercase small">Total Halaman Ini</td>
@@ -157,7 +157,7 @@
                 </table>
             </div>
         </div>
-        
+
         <div class="card-footer bg-white py-3">
             <div class="d-flex justify-content-end">
                 {{ $data->withQueryString()->links() }}

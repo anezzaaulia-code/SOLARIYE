@@ -19,7 +19,7 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
-                
+
                 @if($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <ul class="mb-0 small">
@@ -54,7 +54,7 @@
                 <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-light">
                     <h6 class="fw-bold text-primary m-0">Detail Item Belanja</h6>
                     <button type="button" class="btn btn-primary btn-sm" onclick="addItem()">
-                        <i class="bi bi-plus-lg me-1"></i> Tambah Baris
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Bahan
                     </button>
                 </div>
 
@@ -77,7 +77,7 @@
                                     <select name="items[{{ $index }}][bahan_baku_id]" class="form-select select-bahan" required onchange="updateSatuan(this)">
                                         <option value="" disabled>-- Pilih Bahan --</option>
                                         @foreach ($bahan as $b)
-                                            <option value="{{ $b->id }}" data-satuan="{{ $b->satuan }}" 
+                                            <option value="{{ $b->id }}" data-satuan="{{ $b->satuan }}"
                                                 {{ $b->id == $item->bahan_id ? 'selected' : '' }}>
                                                 {{ $b->nama_bahan }}
                                             </option>
@@ -85,17 +85,17 @@
                                     </select>
                                 </td>
                                 <td class="py-3">
-                                    <input type="number" name="items[{{ $index }}][jumlah]" class="form-control input-qty" 
+                                    <input type="number" name="items[{{ $index }}][jumlah]" class="form-control input-qty"
                                            min="1" value="{{ $item->qty }}" required oninput="hitungTotal()">
                                 </td>
                                 <td class="py-3">
-                                    <input type="text" class="form-control bg-light input-satuan" readonly 
+                                    <input type="text" class="form-control bg-light input-satuan" readonly
                                            value="{{ $item->bahan->satuan ?? '-' }}">
                                 </td>
                                 <td class="py-3">
                                     <div class="input-group">
                                         <span class="input-group-text bg-white">Rp</span>
-                                        <input type="number" name="items[{{ $index }}][harga_satuan]" class="form-control input-harga" 
+                                        <input type="number" name="items[{{ $index }}][harga_satuan]" class="form-control input-harga"
                                                min="0" value="{{ $item->harga_satuan }}" required oninput="hitungTotal()">
                                     </div>
                                 </td>

@@ -10,7 +10,7 @@
         </div>
         <div>
             <button class="btn btn-outline-danger btn-sm" onclick="window.print()">
-                <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+                <i class="bi bi-file-earmark-pdf me-2"></i>Cetak Laporan
             </button>
         </div>
     </div>

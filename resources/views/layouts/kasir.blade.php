@@ -99,7 +99,7 @@
         <nav class="mt-3 flex-grow-1">
             <a href="{{ route('kasir.dashboard') }}"
                 class="nav-link {{ request()->routeIs('kasir.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-grid-fill"></i> Transaksi POS
+                <i class="bi bi-grid-fill"></i> Dashboard Kasir
             </a>
 
             <a href="{{ route('kasir.riwayat') }}"

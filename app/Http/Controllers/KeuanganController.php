@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Keuangan;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class KeuanganController extends Controller
@@ -77,7 +78,7 @@ class KeuanganController extends Controller
 
         // Gunakan clone untuk menghitung total agar query paginate tidak terganggu
         $totalPendapatan = (clone $q)->sum('nominal');
-        
+
         $data = $q->orderBy('tanggal', 'desc')->paginate(15); // Ubah 25 jadi 15 agar pas di layar
 
         $pendapatanHariIni = Keuangan::where('jenis','pemasukan')
@@ -136,31 +137,65 @@ class KeuanganController extends Controller
         return back()->with('success', 'Catatan keuangan dihapus.');
     }
 
-    // LAPORAN LABA RUGI
-    public function labaRugi(Request $request)
+    public function exportPendapatan(Request $request)
     {
-        $from = $request->from ?? now()->startOfMonth()->toDateString();
-        $to   = $request->to   ?? now()->toDateString();
+        $q = Keuangan::with('pesanan')->where('jenis', 'pemasukan');
 
-        $pemasukan  = Keuangan::where('jenis', 'pemasukan')->whereBetween('tanggal', [$from, $to])->sum('nominal');
-        $pengeluaran = Keuangan::where('jenis', 'pengeluaran')->whereBetween('tanggal', [$from, $to])->sum('nominal');
+        if ($request->filled('from')) {
+            $q->whereDate('tanggal', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $q->whereDate('tanggal', '<=', $request->to);
+        }
 
-        return view('admin.keuangan.labarugi', compact('from','to','pemasukan','pengeluaran'));
+        $data = $q->orderBy('tanggal', 'desc')->get();
+
+        // 👉 TAMBAHKAN TOTAL
+        $totalPendapatan = $data->sum('nominal');
+
+        // 👉 TAMBAHKAN PERIODE
+        $from = $request->from;
+        $to   = $request->to;
+
+        $pdf = Pdf::loadView('admin.keuangan.pdf.pendapatan', [
+            'data'             => $data,
+            'totalPendapatan'  => $totalPendapatan,
+            'from'             => $from,
+            'to'               => $to,
+        ])->setPaper('A4', 'portrait');
+
+        return $pdf->download('Laporan-Pendapatan.pdf');
     }
 
-    // EXPORT PENGELUARAN
-    public function exportPengeluaran(Request $request)
+    public function exportPengeluaranPDF(Request $request)
     {
         $q = Keuangan::where('jenis', 'pengeluaran');
 
-        if ($request->filled('from')) $q->whereDate('tanggal', '>=', $request->from);
-        if ($request->filled('to')) $q->whereDate('tanggal', '<=', $request->to);
+        if ($request->filled('sumber')) {
+            $q->where('sumber', $request->sumber);
+        }
+        if ($request->filled('from')) {
+            $q->whereDate('tanggal', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $q->whereDate('tanggal', '<=', $request->to);
+        }
 
-        $data = $q->orderBy('tanggal','desc')->get();
+        $data = $q->orderBy('tanggal', 'desc')->get();
 
-        return response()->json([
-            'status'   => 'ok',
-            'exported' => $data
-        ]);
+        // 👉 INI YANG KURANG
+        $totalPengeluaran = $data->sum('nominal');
+
+        $from = $request->from;
+        $to   = $request->to;
+
+        $pdf = Pdf::loadView('admin.keuangan.pdf.pengeluaran', [
+            'data'             => $data,
+            'totalPengeluaran' => $totalPengeluaran,
+            'from'             => $from,
+            'to'               => $to,
+        ])->setPaper('A4', 'portrait');
+
+        return $pdf->download('Laporan-Pengeluaran.pdf');
     }
 }

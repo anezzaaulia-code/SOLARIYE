@@ -110,12 +110,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('keuangan.destroy');
     Route::get('/keuangan/pendapatan', [KeuanganController::class, 'pendapatan'])
         ->name('pendapatan.index');
+    Route::get('/keuangan/pendapatan/export', [KeuanganController::class, 'exportPendapatan'])
+        ->name('pendapatan.export');
     Route::get('/keuangan/pengeluaran', [KeuanganController::class, 'pengeluaran'])
         ->name('pengeluaran.index');
+    Route::get('/keuangan/pengeluaran/export', [KeuanganController::class, 'exportPengeluaranPDF'])
+        ->name('pengeluaran.export');
     Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])
         ->name('keuangan.laporan');
-    Route::get('/keuangan/export-pengeluaran', [KeuanganController::class, 'exportPengeluaran'])
-        ->name('keuangan.exportPengeluaran');
+    Route::get('/keuangan/laporan/export', [KeuanganController::class, 'exportLaporanKeuangan'])
+        ->name('keuangan.laporan.export');
 });
 
 /*

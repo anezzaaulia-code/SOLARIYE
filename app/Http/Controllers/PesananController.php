@@ -34,46 +34,42 @@ class PesananController extends Controller
         DB::beginTransaction();
 
         try {
-            // Validasi minimum
+
             if (!$request->items || count($request->items) == 0) {
                 throw new \Exception("Item pesanan tidak ditemukan.");
             }
 
-            // Hitung total
             $total = collect($request->items)
                     ->sum(fn($i) => $i['harga'] * $i['qty']);
 
-            // Simpan pesanan
             $pesanan = Pesanan::create([
-                'kode_pesanan'=> 'PSN-' .time() .rand(100,999),
+                'kode_pesanan'=> 'PSN-' . time() . rand(100,999),
                 'pelanggan'   => $request->pelanggan,
                 'nomor_wa'    => $request->nomor_wa,
-                'kasir_id'    => $request->kasir_id,
-                'kasir_nama'  => $request->kasir_nama,
+                'kasir_id'    => auth()->id(),
+                'kasir_nama'  => auth()->user()->name, // FIX PENTING
                 'metode_bayar'=> $request->metode,
                 'bayar'       => $request->bayar,
                 'total_harga' => $total,
                 'status'      => 'menunggu',
             ]);
 
-            // Detail
             foreach ($request->items as $i) {
                 $pesanan->detail()->create([
                     'menu_id' => $i['id'],
                     'nama'    => $i['nama'],
                     'harga'   => $i['harga'],
-                    'jumlah'     => $i['qty'],
-                    'subtotal'   => $i['harga'] * $i['qty'],
+                    'jumlah'  => $i['qty'], // FIX: gunakan jumlah bukan qty
+                    'subtotal'=> $i['harga'] * $i['qty'],
                 ]);
             }
 
-            // Keuangan (pemasukan)
             Keuangan::create([
                 'tanggal'    => now()->format('Y-m-d'),
                 'jenis'      => 'pemasukan',
                 'sumber'     => 'penjualan',
                 'nominal'    => $total,
-                'keterangan' => 'Penjualan #' . $pesanan->id . ' oleh ' . $pesanan->kasir_nama,
+                'keterangan' => 'Penjualan #' . $pesanan->id . ' oleh ' . auth()->user()->name,
                 'ref_id'     => $pesanan->id,
                 'ref_table'  => 'pesanan',
                 'created_by' => auth()->id(),
@@ -88,7 +84,7 @@ class PesananController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            throw $e; // supaya POSController catch & kirim JSON error
+            throw $e;
         }
     }
 

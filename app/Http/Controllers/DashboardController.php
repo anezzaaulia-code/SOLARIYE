@@ -18,7 +18,7 @@ class DashboardController extends Controller
     {
         // Jika kasir membuka dashboard → langsung ke halaman POS.
         if (auth()->user()->role === 'kasir') {
-            return redirect()->route('kasir.pos');
+            return redirect()->route('kasir.pos.index');
         }
 
         // ==== Dashboard Admin ====

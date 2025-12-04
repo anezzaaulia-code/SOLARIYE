@@ -133,12 +133,12 @@ Route::middleware(['auth', 'kasir'])->prefix('kasir')->name('kasir.')->group(fun
     })->name('dashboard');
 
     // POS
-    Route::get('/', [POSController::class, 'index'])->name('pos');
+    Route::get('/', [POSController::class, 'index'])->name('home');
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');
 
-    Route::post('/kasir/pos/store', [POSController::class, 'store'])
-    ->name('kasir.pos.store');
+    // Route::post('/kasir/pos/store', [POSController::class, 'store'])
+    // ->name('kasir.pos.store');
 
     // Riwayat transaksi
     Route::get('/riwayat', [POSController::class, 'riwayat'])->name('riwayat');
@@ -177,4 +177,5 @@ Route::post('/logout', function () {
 // Bahan baku
 Route::resource('bahanbaku', BahanBakuController::class);
 
-Route::get('/register', [RegisterController::class, 'index'])->name('register');
+Route::view('/register', 'auth.register')->name('register');
+

@@ -114,13 +114,10 @@
 </div>
 
 
-
 <script>
 let cart = [];
 
-/* -----------------------------
-   RENDER CART
-------------------------------*/
+/* RENDER CART */
 function renderCart() {
     let html = "";
     let total = 0;
@@ -156,18 +153,14 @@ function renderCart() {
         "Rp " + new Intl.NumberFormat().format(total);
 }
 
-/* -----------------------------
-   UPDATE QTY
-------------------------------*/
+/* UPDATE QTY */
 function updateQty(i, val) {
     cart[i].qty += val;
     if (cart[i].qty <= 0) cart.splice(i, 1);
     renderCart();
 }
 
-/* -----------------------------
-   ADD MENU TO CART
-------------------------------*/
+/* ADD MENU */
 document.querySelectorAll('.menu-item').forEach(item => {
     item.addEventListener('click', () => {
 
@@ -185,9 +178,7 @@ document.querySelectorAll('.menu-item').forEach(item => {
     });
 });
 
-/* -----------------------------
-   MODAL PEMBAYARAN
-------------------------------*/
+/* MODAL BAYAR */
 function toggleModal(show) {
     document.getElementById("paymentModal").classList.toggle("hidden", !show);
 
@@ -203,9 +194,7 @@ document.getElementById("btnBayar").addEventListener("click", () => {
     toggleModal(true);
 });
 
-/* -----------------------------
-   HITUNG KEMBALIAN
-------------------------------*/
+/* HITUNG KEMBALIAN */
 document.getElementById("jumlahBayar").addEventListener("input", () => {
 
     let total = cart.reduce((a, b) => a + b.harga * b.qty, 0);
@@ -217,65 +206,61 @@ document.getElementById("jumlahBayar").addEventListener("input", () => {
 });
 
 /* -----------------------------
-   SIMPAN TRANSAKSI
-------------------------------*/
-    document.getElementById("btnSimpanPembayaran").addEventListener("click", async () => {
+   SIMPAN TRANSAKSI (FIX)
+------------------------------ */
+document.getElementById("btnSimpanPembayaran").addEventListener("click", async () => {
 
-        if (cart.length === 0) {
-            alert("Keranjang kosong!");
+    if (cart.length === 0) {
+        alert("Keranjang kosong!");
+        return;
+    }
+
+    let nomorWA = document.getElementById("nomorWA").value;
+    if (nomorWA && nomorWA.length < 10) {
+        alert("Nomor WA tidak valid!");
+        return;
+    }
+
+    const payload = {
+        pelanggan  : document.getElementById("namaPelanggan").value,
+        nomor_wa   : nomorWA,
+        kasir_id   : "{{ auth()->id() }}",
+        kasir_nama : "{{ auth()->user()->name }}",
+        items      : cart,
+        metode     : document.getElementById("metodePembayaran").value,
+        bayar      : document.getElementById("jumlahBayar").value
+    };
+
+    try {
+        const response = await fetch("{{ route('kasir.pos.store') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await response.json();
+        console.log("RESP:", res);
+
+        if (!res.success) {
+            alert("Gagal simpan transaksi\nError: " + res.message);
             return;
         }
 
-        let nomorWA = document.getElementById("nomorWA").value;
-        if (nomorWA && nomorWA.length < 10) {
-            alert("Nomor WA tidak valid!");
-            return;
-        }
+        // RESET
+        cart = [];
+        renderCart();
+        toggleModal(false);
 
-        try {
-            const response = await fetch("{{ route('kasir.pos.store') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    pelanggan  : document.getElementById("namaPelanggan").value,
-                    nomor_wa   : nomorWA,
-                    kasir_id   : "{{ auth()->id() }}",
-                    kasir_nama : "{{ auth()->user()->name }}",
-                    items      : cart,
-                    metode     : document.getElementById("metodePembayaran").value,
-                    bayar      : document.getElementById("jumlahBayar").value
-                })
-            });
+        alert("Transaksi disimpan!");
 
-            const res = await response.json();
-            console.log("RESP:", res);
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
 
-            if (!res.success) {
-                alert("Gagal simpan transaksi");
-                return;
-            }
-
-            // RESET CART
-            cart = [];
-            renderCart();
-            toggleModal(false);
-
-            // CETAK STRUK
-            if (res.struk_url) {
-                window.open(res.struk_url, "_blank");
-            }
-
-            alert("Transaksi disimpan!");
-
-        } catch (e) {
-            console.error(e);
-            alert("Terjadi error: " + e.message);
-        }
-
-    });
+});
 </script>
 
 @endsection

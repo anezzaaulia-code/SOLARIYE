@@ -34,11 +34,18 @@ class PesananController extends Controller
         DB::beginTransaction();
 
         try {
-            // Hitung total pesanan
-            $total = collect($request->items)->sum(fn($i) => $i['harga'] * $i['qty']);
+            // Validasi minimum
+            if (!$request->items || count($request->items) == 0) {
+                throw new \Exception("Item pesanan tidak ditemukan.");
+            }
+
+            // Hitung total
+            $total = collect($request->items)
+                    ->sum(fn($i) => $i['harga'] * $i['qty']);
 
             // Simpan pesanan
             $pesanan = Pesanan::create([
+                'kode_pesanan'=> 'PSN-' .time() .rand(100,999),
                 'pelanggan'   => $request->pelanggan,
                 'nomor_wa'    => $request->nomor_wa,
                 'kasir_id'    => $request->kasir_id,
@@ -49,17 +56,18 @@ class PesananController extends Controller
                 'status'      => 'menunggu',
             ]);
 
-            // Simpan detail pesanan
+            // Detail
             foreach ($request->items as $i) {
                 $pesanan->detail()->create([
                     'menu_id' => $i['id'],
                     'nama'    => $i['nama'],
                     'harga'   => $i['harga'],
-                    'qty'     => $i['qty']
+                    'jumlah'     => $i['qty'],
+                    'subtotal'   => $i['harga'] * $i['qty'],
                 ]);
             }
 
-            // ====== CATAT PEMASUKAN KE TABEL KEUANGAN ======
+            // Keuangan (pemasukan)
             Keuangan::create([
                 'tanggal'    => now()->format('Y-m-d'),
                 'jenis'      => 'pemasukan',
@@ -76,11 +84,11 @@ class PesananController extends Controller
             if ($returnObject) return $pesanan;
 
             return redirect()->route('pesanan.index')
-                ->with('success', 'Pesanan berhasil dibuat');
+                ->with('success', 'Pesanan berhasil disimpan');
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
+            throw $e; // supaya POSController catch & kirim JSON error
         }
     }
 

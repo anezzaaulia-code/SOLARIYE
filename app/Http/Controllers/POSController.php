@@ -24,26 +24,34 @@ class POSController extends Controller
     {
         try {
 
-            // Panggil pesanan controller
+            // Pastikan JSON otomatis di-parse
+            $data = $request->json()->all();
+
+            // Paksa merge ke request agar kompatibel dengan PesananController
+            $request->merge($data);
+
+            // Panggil PesananController
             $pesananController = app()->make(PesananController::class);
-            $pesanan = $pesananController->store($request, true); // <-- TRUE = return data, bukan redirect
+            $pesanan = $pesananController->store($request, true);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Transaksi berhasil disimpan',
-                'struk_url' => route('kasir.pos.struk', $pesanan->id)
+                // 'struk_url' => route('kasir.pos.struk', $pesanan->id)
+                'struk_url' => null
             ]);
 
         } catch (\Exception $e) {
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(), // <-- tampilkan error asli
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
             ], 500);
 
         }
     }
-
 
     public function riwayat()
     {

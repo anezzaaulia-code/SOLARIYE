@@ -13,6 +13,7 @@ class BahanBaku extends Model
         'satuan',
         'batas_kuning',
         'batas_merah',
+        'stok'
     ];
 
     // Relasi ke stok harian
@@ -23,20 +24,9 @@ class BahanBaku extends Model
 
     public function updateStatus()
     {
-        $stokTerbaru = $this->stokHarian()->latest('tanggal')->value('stok_akhir');
-
-        if ($stokTerbaru === null) {
-            $this->status = 'Belum Ada Stok';
-        } elseif ($stokTerbaru <= $this->batas_merah) {
-            $this->status = 'Merah'; // Habis
-        } elseif ($stokTerbaru <= $this->batas_kuning) {
-            $this->status = 'Kuning'; // Menipis
-        } else {
-            $this->status = 'Hijau'; // Aman
-        }
-
-        $this->save();
+        // tidak menyimpan ke database
+        return $this->stok <= 0 ? 'Merah' :
+            ($this->stok <= $this->batas_merah ? 'Merah' :
+            ($this->stok <= $this->batas_kuning ? 'Kuning' : 'Hijau'));
     }
-
-
 }

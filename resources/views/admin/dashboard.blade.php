@@ -101,10 +101,6 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="m-0 fw-bold text-danger"><i class="bi bi-box-seam me-2"></i>Peringatan Stok Bahan Baku</h6>
-            <a href="#" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
-        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light text-secondary small text-uppercase">
@@ -124,13 +120,13 @@
                         <td class="text-center fs-5 fw-bold text-danger">{{ $bahan->stok }} <span class="fs-6 text-muted fw-normal">{{ $bahan->satuan }}</span></td>
                         <td class="text-center">
                             @if($bahan->stok <= 5)
-                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3">KRITIS</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3">HABIS</span>
                             @else
-                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 text-dark">Hati-hati</span>
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 text-dark">MENIPIS</span>
                             @endif
                         </td>
                         <td class="text-end px-4">
-                            <a href="#" class="btn btn-sm btn-primary">Update Stok</a>
+                            <a href="{{ route('pembelian.create') }}" class="btn btn-sm btn-primary">Update Stok</a>
                         </td>
                     </tr>
                     @empty

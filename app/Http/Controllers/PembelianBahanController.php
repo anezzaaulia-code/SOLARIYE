@@ -49,7 +49,8 @@ class PembelianBahanController extends Controller
         DB::beginTransaction();
 
         try {
-            // Supplier baru?
+
+            // Jika supplier baru ditambahkan manual
             if ($request->supplier_baru) {
                 $supplier = Supplier::create([
                     'nama_supplier' => $request->supplier_baru
@@ -59,7 +60,7 @@ class PembelianBahanController extends Controller
                 $supplierId = $request->supplier_id;
             }
 
-            // Header pembelian
+            // Buat header pembelian
             $pembelian = PembelianBahan::create([
                 'tanggal'     => $request->tanggal,
                 'supplier_id' => $supplierId,
@@ -69,42 +70,34 @@ class PembelianBahanController extends Controller
 
             $total = 0;
 
-            // Loop detail
             foreach ($request->bahan_id as $i => $bahanId) {
 
-                $bahanBaru = $request->bahan_baru[$i] ?? null;
-                $qty       = $request->qty[$i] ?? null;
-                $harga     = $request->harga_satuan[$i] ?? null;
-                $satuan    = $request->satuan[$i] ?? null;
+                $qty   = $request->qty[$i] ?? 0;
+                $harga = $request->harga_satuan[$i] ?? 0;
 
-                if ((!$bahanId && !$bahanBaru) || !$qty || !$harga) {
+                if ($qty <= 0 || $harga <= 0) {
                     continue;
                 }
 
-                // Bahan baru?
-                if (!$bahanId && $bahanBaru) {
-                    $newBahan = BahanBaku::create([
-                        'nama_bahan'  => $bahanBaru,
-                        'stok'        => 0,
-                        'batas_merah' => 5,
-                        'satuan'      => $satuan,
-                    ]);
-                    $bahanId = $newBahan->id;
+                // CARI BAHAN
+                $bahan = BahanBaku::find($bahanId);
+
+                if (!$bahan) {
+                    throw new \Exception("Bahan dengan ID $bahanId tidak ditemukan.");
                 }
 
-                // Insert detail
+                // Simpan detail pembelian
                 $subtotal = $qty * $harga;
 
                 DetailPembelianBahan::create([
                     'pembelian_bahan_id' => $pembelian->id,
-                    'bahan_id'           => $bahanId,
+                    'bahan_id'           => $bahan->id,
                     'qty'                => $qty,
                     'harga_satuan'       => $harga,
                     'subtotal'           => $subtotal,
                 ]);
 
-                // UPDATE STOK BAHAN
-                $bahan = BahanBaku::find($bahanId);
+                // UPDATE STOK BAHAN (TIDAK MEMBUAT BAHAN BARU)
                 $bahan->stok += $qty;
                 $bahan->save();
 
@@ -114,7 +107,7 @@ class PembelianBahanController extends Controller
             // Update total pembelian
             $pembelian->update(['total_harga' => $total]);
 
-            // Catat keuangan
+            // Simpan keuangan
             Keuangan::create([
                 'tanggal'    => $request->tanggal,
                 'jenis'      => 'pengeluaran',

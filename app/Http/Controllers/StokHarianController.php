@@ -27,105 +27,150 @@ class StokHarianController extends Controller
     {
         $stok = StokHarian::findOrFail($id);
         $bahan = BahanBaku::all();
+
         return view('admin.stokharian.edit', compact('stok', 'bahan'));
     }
+
+    // ============================
+    // STORE FINAL + STATUS FIX
+    // ============================
 
     public function store(Request $request)
     {
         $request->validate([
-            'bahan_id' => 'required|exists:bahan_baku,id',
-            'tanggal'  => 'required|date',
+            'bahan_id'   => 'required|exists:bahan_baku,id',
+            'tanggal'    => 'required|date',
+            'stok_masuk' => 'required|numeric|min:0',
             'stok_akhir' => 'required|numeric|min:0',
         ]);
 
         $bahan = BahanBaku::findOrFail($request->bahan_id);
 
-        // Ambil stok terakhir untuk bahan ini
-        $stokTerakhir = StokHarian::where('bahan_id', $request->bahan_id)
-            ->orderBy('tanggal', 'desc')
-            ->value('stok_akhir');
+        // Hitung pemakaian shift
+        $pemakaian = $request->stok_masuk - $request->stok_akhir;
+        if ($pemakaian < 0) $pemakaian = 0;
 
-        // Stok awal = stok akhir sebelumnya, jika tidak ada, ambil stok dari tabel bahan
-        $stok_awal = $stokTerakhir ?? $bahan->stok;
-        $stok_akhir = $request->stok_akhir;
+        // Stok gudang berkurang sesuai pemakaian
+        $bahan->stok -= $pemakaian;
+        if ($bahan->stok < 0) $bahan->stok = 0;
 
-        // Hitung pemakaian
-        $pemakaian = $stok_awal - $stok_akhir;
-
-        // Tentukan status
-        if ($stok_akhir <= 0) {
-            $status = 'habis';
-        } elseif ($stok_akhir <= $bahan->batas_merah) {
-            $status = 'menipis';
-        } else {
-            $status = 'aman';
-        }
+        $this->updateStatusBahan($bahan);
+        $bahan->save();
 
         // Simpan stok harian
-        StokHarian::updateOrCreate(
-            [
-                'bahan_id' => $request->bahan_id,
-                'tanggal'  => $request->tanggal
-            ],
-            [
-                'stok_awal'  => $stok_awal,
-                'stok_akhir' => $stok_akhir,
-                'pemakaian'  => $pemakaian,
-                'status_warna'     => $status
-            ]
-        );
-
-        // Update stok terbaru pada tabel bahan
-        $bahan->update([
-            'stok' => $stok_akhir
+        StokHarian::create([
+            'tanggal'      => $request->tanggal,
+            'bahan_id'     => $bahan->id,
+            'stok_awal'    => $request->stok_masuk,
+            'stok_akhir'   => $request->stok_akhir,
+            'pemakaian'    => $pemakaian,
+            'status_warna' => $this->getStatusShift($request->stok_awal ?? $request->stok_masuk, $request->stok_akhir, $bahan),
         ]);
 
-        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil dicatat.');
+        return redirect()->route('stokharian.index')
+            ->with('success', 'Stok harian berhasil dicatat.');
     }
+
+    // ============================
+    // UPDATE FINAL + STATUS FIX
+    // ============================
 
     public function update(Request $request, $id)
     {
         $request->validate([
+            'stok_masuk' => 'required|numeric|min:0',
             'stok_akhir' => 'required|numeric|min:0',
         ]);
 
         $stok = StokHarian::findOrFail($id);
         $bahan = BahanBaku::findOrFail($stok->bahan_id);
 
-        $stok_akhir = $request->stok_akhir;
+        // Pemakaian lama
+        $pemakaian_lama = $stok->pemakaian;
 
-        // Hitung pemakaian: stok awal tidak berubah
-        $pemakaian = $stok->stok_awal - $stok_akhir;
+        // Pemakaian baru
+        $pemakaian_baru = $request->stok_masuk - $request->stok_akhir;
+        if ($pemakaian_baru < 0) $pemakaian_baru = 0;
 
-        // Tentukan status
-        if ($stok_akhir <= 0) {
-            $status = 'habis';
-        } elseif ($stok_akhir <= $bahan->batas_merah) {
-            $status = 'menipis';
-        } else {
-            $status = 'aman';
-        }
+        // Kembalikan stok lama
+        $bahan->stok += $pemakaian_lama;
+
+        // Kurangi stok sesuai pemakaian baru
+        $bahan->stok -= $pemakaian_baru;
+        if ($bahan->stok < 0) $bahan->stok = 0;
+
+        $this->updateStatusBahan($bahan);
+        $bahan->save();
 
         // Update stok harian
         $stok->update([
-            'stok_akhir' => $stok_akhir,
-            'pemakaian'  => $pemakaian,
-            'status_warna'     => $status
+            'stok_awal'    => $request->stok_masuk,
+            'stok_akhir'   => $request->stok_akhir,
+            'pemakaian'    => $pemakaian_baru,
+            'status_warna' => $this->getStatusShift($request->stok_masuk, $request->stok_akhir, $bahan),
         ]);
 
-        // Update stok pada tabel bahan
-        $bahan->update([
-            'stok' => $stok_akhir
-        ]);
-
-        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil diperbarui.');
+        return redirect()->route('stokharian.index')
+            ->with('success', 'Stok harian berhasil diperbarui.');
     }
+
+    // ============================
+    // DELETE FINAL
+    // ============================
 
     public function destroy($id)
     {
         $stok = StokHarian::findOrFail($id);
+        $bahan = $stok->bahan;
+
+        // Kembalikan pemakaian shift ke stok gudang
+        $bahan->stok += $stok->pemakaian;
+
+        if ($bahan->stok < 0) $bahan->stok = 0;
+
+        $this->updateStatusBahan($bahan);
+        $bahan->save();
+
         $stok->delete();
 
-        return redirect()->route('stokharian.index')->with('success', 'Stok harian berhasil dihapus.');
+        return redirect()->route('stokharian.index')
+            ->with('success', 'Stok harian berhasil dihapus.');
+    }
+
+    // ============================
+    // STATUS SHIFT (FIXED)
+    // ============================
+
+    private function getStatusShift($stok_awal, $stok_akhir, $bahan)
+    {
+        // Jika stok awal == stok akhir → TIDAK ADA PEMAKAIAN → SHIFT HABIS (SISA TIDAK DITARIK)
+        if ($stok_awal == $stok_akhir) {
+            return 'habis';
+        }
+
+        // Jika tidak ada sisa di shift = benar-benar habis
+        if ($stok_akhir <= 0) return 'habis';
+
+        // Menipis jika sisa <= batas kuning
+        if ($stok_akhir <= $bahan->batas_kuning) return 'menipis';
+
+        return 'aman';
+    }
+
+    // ============================
+    // STATUS BAHAN
+    // ============================
+
+    private function updateStatusBahan($bahan)
+    {
+        if ($bahan->stok <= 0) {
+            $bahan->status_warna = 'habis';
+        } elseif ($bahan->stok <= $bahan->batas_merah) {
+            $bahan->status_warna = 'habis';
+        } elseif ($bahan->stok <= $bahan->batas_kuning) {
+            $bahan->status_warna = 'menipis';
+        } else {
+            $bahan->status_warna = 'aman';
+        }
     }
 }

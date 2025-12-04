@@ -1,179 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - SOLARIYE</title>
 
-    <!-- BOOTSTRAP -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
         body {
             min-height: 100vh;
             display: flex;
             overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
         }
+
+        /* === SIDEBAR STYLE === */
         #sidebar {
-            min-width: 250px;
-            max-width: 250px;
-            background: #343a40;
+            min-width: 260px;
+            max-width: 260px;
+            background-color: #212529; /* Dark bg */
             color: #fff;
-            transition: all 0.3s;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
+
         #sidebar.collapsed {
             min-width: 80px;
             max-width: 80px;
         }
+
+        /* Header Sidebar */
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #343a40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 70px;
+        }
+        .app-name { font-weight: bold; font-size: 1.2rem; margin-left: 10px; transition: 0.3s; }
+        #sidebar.collapsed .app-name { display: none; }
+
+        /* Menu Links */
         #sidebar .nav-link {
+            color: #adb5bd;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            transition: 0.2s;
+            border-left: 4px solid transparent;
+        }
+        #sidebar .nav-link:hover, #sidebar .nav-link.active {
             color: #fff;
+            background-color: #343a40;
+            border-left: 4px solid #0d6efd; /* Aksen Biru */
         }
-        #sidebar .nav-link:hover {
-            background: #495057;
+        #sidebar .nav-link i { font-size: 1.2rem; min-width: 30px; text-align: center; }
+        
+        .link-text { margin-left: 10px; white-space: nowrap; transition: 0.3s; }
+        #sidebar.collapsed .link-text, 
+        #sidebar.collapsed .bi-chevron-down { display: none; }
+
+        /* Scrollable Menu Area */
+        .sidebar-menu {
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
-        #sidebar .nav-link i {
-            margin-right: 10px;
+        /* Custom Scrollbar Sidebar */
+        .sidebar-menu::-webkit-scrollbar { width: 5px; }
+        .sidebar-menu::-webkit-scrollbar-track { background: #212529; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: #495057; border-radius: 10px; }
+
+        /* Submenu */
+        .submenu-link { padding-left: 50px !important; font-size: 0.9rem; }
+        #sidebar.collapsed .collapse { display: none !important; } /* Hide submenu when collapsed */
+
+        /* === FOOTER SIDEBAR (LOGOUT & TOGGLE) === */
+        .sidebar-footer {
+            border-top: 1px solid #343a40;
+            background: #1c1f23;
+            padding: 15px;
         }
+
+        .btn-logout {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: 0.2s;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid transparent;
+        }
+        .btn-logout:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+        #sidebar.collapsed .btn-logout span { display: none; }
+
+        .sidebar-toggle {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #adb5bd;
+            padding: 5px;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .sidebar-toggle:hover { color: white; }
+
+        /* === CONTENT AREA === */
         #content {
             flex: 1;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-        .sidebar-toggle {
-            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
 
-    {{-- SIDEBAR --}}
-    <div id="sidebar" class="d-flex flex-column p-3">
-        <a href="{{ route('dashboard') }}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-            <i class="bi bi-speedometer2 fs-3"></i>
-            <span class="fs-5 fw-bold">SOLARIYE</span>
-        </a>
+    <nav id="sidebar">
+        
+        <div class="sidebar-header">
+            <i class="bi bi-speedometer2 fs-4 text-primary"></i>
+            <span class="app-name">SOLARIYE</span>
+        </div>
 
-        <hr>
+        <div class="sidebar-menu py-3">
+            <ul class="nav nav-pills flex-column mb-auto">
+                
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-grid-fill"></i>
+                        <span class="link-text">Dashboard</span>
+                    </a>
+                </li>
 
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link text-white">
-                    <i class="bi bi-house-door"></i>
-                    <span class="link-text">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('bahanbaku.index') }}" class="nav-link text-white">
-                    <i class="bi bi-box-seam"></i>
-                    <span class="link-text">Bahan Baku</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('menu.index') }}" class="nav-link text-white">
-                    <i class="bi bi-list-ul"></i>
-                    <span class="link-text">Menu</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('supplier.index') }}" class="nav-link text-white">
-                    <i class="bi bi-truck"></i>
-                    <span class="link-text">Supplier</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('stokharian.index') }}" class="nav-link text-white">
-                    <i class="bi bi-calendar-check"></i>
-                    <span class="link-text">Stok Harian</span>
-                </a>
-            </li>
+                <li>
+                    <a href="{{ route('bahanbaku.index') }}" class="nav-link {{ request()->routeIs('bahanbaku.*') ? 'active' : '' }}">
+                        <i class="bi bi-box-seam"></i>
+                        <span class="link-text">Bahan Baku</span>
+                    </a>
+                </li>
 
-            <!-- 📌 MENU BARU: Pembelian Bahan -->
-            <li>
-                <a href="{{ route('pembelian.index') }}" class="nav-link text-white">
-                    <i class="bi bi-cart-plus"></i>
-                    <span class="link-text">Pembelian Bahan</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white d-flex justify-content-between align-items-center"
-                data-bs-toggle="collapse"
-                href="#submenuKeuangan"
-                role="button"
-                aria-expanded="false"
-                aria-controls="submenuKeuangan">
-                    <div>
-                        <i class="bi bi-cash-stack"></i>
-                        <span class="link-text">Keuangan</span>
+                <li>
+                    <a href="{{ route('menu.index') }}" class="nav-link {{ request()->routeIs('menu.*') ? 'active' : '' }}">
+                        <i class="bi bi-cup-hot"></i>
+                        <span class="link-text">Menu</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('supplier.index') }}" class="nav-link {{ request()->routeIs('supplier.*') ? 'active' : '' }}">
+                        <i class="bi bi-truck"></i>
+                        <span class="link-text">Supplier</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('stokharian.index') }}" class="nav-link {{ request()->routeIs('stokharian.*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-check"></i>
+                        <span class="link-text">Stok Harian</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('pembelian.index') }}" class="nav-link {{ request()->routeIs('pembelian.*') ? 'active' : '' }}">
+                        <i class="bi bi-cart-plus"></i>
+                        <span class="link-text">Pembelian Bahan</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#submenuKeuangan">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-cash-coin"></i>
+                            <span class="link-text">Keuangan</span>
+                        </div>
+                        <i class="bi bi-chevron-down link-text" style="font-size: 0.8rem;"></i>
+                    </a>
+                    <div class="collapse {{ request()->is('pendapatan*', 'pengeluaran*', 'keuangan*') ? 'show' : '' }}" id="submenuKeuangan">
+                        <ul class="nav flex-column">
+                            <li>
+                                <a href="{{ route('pendapatan.index') }}" class="nav-link submenu-link {{ request()->routeIs('pendapatan.*') ? 'active' : '' }}">
+                                    Pendapatan
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('pengeluaran.index') }}" class="nav-link submenu-link {{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
+                                    Pengeluaran
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('keuangan.laporan') }}" class="nav-link submenu-link {{ request()->routeIs('keuangan.laporan') ? 'active' : '' }}">
+                                    Laporan Keuangan
+                                </a>
+                            </li>
+                        </ul>
                     </div>
-                    <i class="bi bi-chevron-down"></i>
-                </a>
+                </li>
 
-                <div class="collapse ms-4" id="submenuKeuangan">
-                    <ul class="nav flex-column">
+                <li>
+                    <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i>
+                        <span class="link-text">Users</span>
+                    </a>
+                </li>
 
-                        <li>
-                            <a href="{{ route('pendapatan.index') }}" class="nav-link text-white">
-                                <i class="bi bi-coin"></i>
-                                Pendapatan
-                            </a>
-                        </li>
+            </ul>
+        </div>
 
-                        <li>
-                            <a href="{{ route('pengeluaran.index') }}" class="nav-link text-white">
-                                <i class="bi bi-receipt-cutoff"></i>
-                                Pengeluaran
-                            </a>
-                        </li>
+        <div class="sidebar-footer">
+            
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button class="btn-logout" type="submit" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
 
-                        <li>
-                            <a href="{{ route('keuangan.laporan') }}" class="nav-link text-white">
-                                <i class="bi bi-bar-chart"></i>
-                                Laporan Keuangan
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            <li>
-                <a href="{{ route('users.index') }}" class="nav-link text-white">
-                    <i class="bi bi-people"></i>
-                    <span class="link-text">Users</span>
-                </a>
-            </li>
-        </ul>
-
-        <hr>
-
-        {{-- LOGOUT BUTTON --}}
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button class="btn btn-danger w-100 mb-2">
-                <i class="bi bi-box-arrow-right"></i> Logout
+            <button class="sidebar-toggle" id="sidebarCollapseBtn" title="Toggle Sidebar">
+                <i class="bi bi-chevron-left"></i>
             </button>
-        </form>
+        </div>
 
-        {{-- COLLAPSE BUTTON --}}
-        <button class="btn btn-outline-light w-100 sidebar-toggle">
-            <i class="bi bi-chevron-left"></i>
-        </button>
-    </div>
+    </nav>
 
-    {{-- CONTENT AREA --}}
     <div id="content">
         @yield('content')
     </div>
 
-    <!-- SCRIPTS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.querySelector('.sidebar-toggle');
+        const toggleBtn = document.getElementById('sidebarCollapseBtn');
+        const toggleIcon = toggleBtn.querySelector('i');
 
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
-            toggleBtn.querySelector('i').classList.toggle('bi-chevron-right');
+            
+            // Ubah ikon panah
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('bi-chevron-left');
+                toggleIcon.classList.add('bi-chevron-right');
+            } else {
+                toggleIcon.classList.remove('bi-chevron-right');
+                toggleIcon.classList.add('bi-chevron-left');
+            }
         });
     </script>
 

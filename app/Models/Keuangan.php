@@ -37,7 +37,6 @@ class Keuangan extends Model
     // Relasi khusus pesanan (opsional)
     public function pesanan()
     {
-        return $this->belongsTo(Pesanan::class, 'ref_id')
-                    ->where('ref_table', 'pesanan');
+        return $this->belongsTo(Pesanan::class, 'ref_id');
     }
 }

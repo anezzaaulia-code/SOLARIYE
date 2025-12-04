@@ -13,10 +13,14 @@ class Pesanan extends Model
 
     protected $fillable = [
         'kode_pesanan',
-        'total_harga',
-        'metode_bayar',
-        'status',
+        'pelanggan',
+        'nomor_wa',
         'kasir_id',
+        'kasir_nama',
+        'metode_bayar',
+        'bayar',
+        'total_harga',
+        'status',
     ];
 
     public function kasir()

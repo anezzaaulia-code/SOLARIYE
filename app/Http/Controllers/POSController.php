@@ -17,7 +17,7 @@ class POSController extends Controller
     public function index()
     {
         $menus = Menu::where('status','tersedia')->orderBy('nama')->get();
-        return view('kasir.pos.index', compact('menus'));
+        return view('kasir.dashboard.index', compact('menus'));
     }
 
     public function store(Request $request)

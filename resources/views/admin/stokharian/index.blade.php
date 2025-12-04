@@ -1,76 +1,121 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="card shadow">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4>Stok Harian</h4>
-        <a href="{{ route('stokharian.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Input Stok Hari Ini
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark m-0">Stok Harian</h4>
+            <p class="text-muted small m-0">Laporan pemakaian bahan baku harian.</p>
+        </div>
+        <a href="{{ route('stokharian.create') }}" class="btn btn-primary fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> Input Stok Hari Ini
         </a>
     </div>
 
-    <div class="card-body">
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
-        {{-- Notif sukses --}}
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="m-0 fw-bold text-primary"><i class="bi bi-calendar-check me-2"></i>Riwayat Stok</h6>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary small text-uppercase">
+                        <tr>
+                            <th class="px-4 py-3" width="15%">Tanggal</th>
+                            <th class="py-3">Bahan Baku</th>
+                            <th class="py-3 text-center">Stok Awal</th>
+                            <th class="py-3 text-center">Stok Akhir</th>
+                            <th class="py-3 text-center">Pemakaian</th>
+                            <th class="py-3 text-center">Status</th>
+                            <th class="py-3 text-end px-4" width="15%">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($stokharian as $item)
+                        @php
+                            $pemakaian = $item->stok_awal - $item->stok_akhir;
+                            $badgeColor = match ($item->status_warna) {
+                                'habis' => 'danger',
+                                'menipis' => 'warning',
+                                default => 'success'
+                            };
+                            $badgeText = ucfirst($item->status_warna);
+                        @endphp
+                        <tr>
+                            <td class="px-4 fw-bold text-dark">
+                                {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
+                            </td>
 
-        <table class="table table-striped text-center">
-            <thead>
-                <tr>
-                    <th>Tanggal</th>
-                    <th>Bahan</th>
-                    <th>Stok Awal</th>
-                    <th>Stok Akhir</th>
-                    <th>Pemakaian</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
+                            <td>
+                                @if($item->bahan)
+                                    <span class="fw-bold text-dark">{{ $item->bahan->nama_bahan }}</span>
+                                    <small class="text-muted d-block">{{ $item->bahan->satuan }}</small>
+                                @else
+                                    <span class="text-muted fst-italic">- Data Bahan Terhapus -</span>
+                                @endif
+                            </td>
 
-            <tbody>
-                @foreach ($stokharian as $item)
-                @php
-                    $pemakaian = $item->stok_awal - $item->stok_akhir;
+                            <td class="text-center">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border px-3">
+                                    {{ $item->stok_awal }}
+                                </span>
+                            </td>
 
-                    // Badge warna sesuai status database
-                    $badge = match ($item->status_warna) {
-                        'habis' => 'danger',
-                        'menipis' => 'warning',
-                        default => 'success'
-                    };
-                @endphp
+                            <td class="text-center">
+                                <span class="fw-bold text-dark">{{ $item->stok_akhir }}</span>
+                            </td>
 
-                <tr>
-                    <td>{{ $item->tanggal }}</td>
-                    <td>{{ $item->bahan->nama_bahan }}</td>
-                    <td>{{ $item->stok_awal }} {{ $item->bahan->satuan }}</td>
-                    <td>{{ $item->stok_akhir }} {{ $item->bahan->satuan }}</td>
-                    <td>{{ $pemakaian }} {{ $item->bahan->satuan }}</td>
-                    <td>
-                        <span class="badge bg-{{ $badge }}">
-                            {{ ucfirst($item->status_warna) }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{{ route('stokharian.edit', $item->id) }}" class="btn btn-warning btn-sm">
-                            <i class="bi bi-pencil"></i>
-                        </a>
+                            <td class="text-center">
+                                <span class="text-danger fw-bold">- {{ $pemakaian }}</span>
+                            </td>
 
-                        <form action="{{ route('stokharian.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data ini?')" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
+                            <td class="text-center">
+                                <span class="badge bg-{{ $badgeColor }} bg-opacity-10 text-{{ $badgeColor }} border border-{{ $badgeColor }} rounded-pill px-3">
+                                    {{ $badgeText }}
+                                </span>
+                            </td>
 
-        </table>
+                            <td class="text-end px-4">
+                                <div class="btn-group">
+                                    <a href="{{ route('stokharian.edit', $item->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <form action="{{ route('stokharian.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus data stok ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                                Belum ada data stok harian. Silakan input stok hari ini.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white py-3">
+            {{-- {{ $stokharian->links() }} --}} 
+        </div>
     </div>
+
 </div>
 @endsection

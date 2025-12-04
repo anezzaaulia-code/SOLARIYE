@@ -66,14 +66,19 @@ class KeuanganController extends Controller
     }
 
     // PENDAPATAN
+    // PENDAPATAN (Update agar memuat nama pelanggan)
     public function pendapatan(Request $request)
     {
-        $q = Keuangan::where('jenis', 'pemasukan');
+        // Tambahkan with('pesanan') di sini
+        $q = Keuangan::with('pesanan')->where('jenis', 'pemasukan');
 
         if ($request->filled('from')) $q->whereDate('tanggal', '>=', $request->from);
         if ($request->filled('to')) $q->whereDate('tanggal', '<=', $request->to);
 
-        $data = $q->orderBy('tanggal', 'desc')->paginate(25);
+        // Gunakan clone untuk menghitung total agar query paginate tidak terganggu
+        $totalPendapatan = (clone $q)->sum('nominal');
+        
+        $data = $q->orderBy('tanggal', 'desc')->paginate(15); // Ubah 25 jadi 15 agar pas di layar
 
         $pendapatanHariIni = Keuangan::where('jenis','pemasukan')
             ->whereDate('tanggal', today())->sum('nominal');
@@ -82,8 +87,9 @@ class KeuanganController extends Controller
             ->whereBetween('tanggal', [now()->startOfWeek(), now()->endOfWeek()])
             ->sum('nominal');
 
-        $totalPendapatan = $q->sum('nominal');
-
+        // Pastikan nama view sesuai dengan lokasi file blade Anda
+        // Jika file blade Anda ada di resources/views/admin/laporan/index.blade.php
+        // Maka ganti 'admin.keuangan.pendapatan' menjadi 'admin.laporan.index'
         return view('admin.keuangan.pendapatan', compact(
             'data','pendapatanHariIni','pendapatanMinggu','totalPendapatan'
         ));

@@ -58,7 +58,7 @@ class POSController extends Controller
 
                 // 4c. Pesan struk (plain text dulu)
                 $plainMessage =
-"📄 *Struk Belanja*
+"📄 *SOLARIYE*
 Tanggal: " . date('d/m/Y H:i') . "
 
 *Barang:*

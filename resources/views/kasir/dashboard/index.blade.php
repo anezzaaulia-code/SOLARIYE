@@ -26,7 +26,7 @@
             display: flex; flex-direction: column; flex-shrink: 0;
         }
         .sidebar .nav-link {
-            color: #adb5bd; padding: 12px 20px; display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 500;
+            color: #adb5bd; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-weight: 500; text-decoration: none;
         }
         .sidebar .nav-link:hover, .sidebar .nav-link.active {
             color: white; background-color: #343a40; border-left: 4px solid #0d6efd;
@@ -135,7 +135,7 @@
                     <div class="tab-pane fade show active" id="pills-makanan" role="tabpanel">
                         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 g-3" id="containerMakanan">
                             @foreach ($menus as $menu)
-                                {{-- Cek apakah kategori mengandung kata 'makan' (case insensitive) --}}
+                                {{-- LOGIKA: Tampilkan di tab Makanan jika kategori mengandung kata 'makan' --}}
                                 @if(stripos($menu->kategori->nama ?? '', 'makan') !== false)
                                     <div class="col menu-item-col" data-name="{{ strtolower($menu->nama) }}">
                                         <div class="card card-menu h-100" onclick="addToCart({{ $menu->id }}, '{{ $menu->nama }}', {{ $menu->harga }})">
@@ -160,7 +160,7 @@
                     <div class="tab-pane fade" id="pills-minuman" role="tabpanel">
                         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-4 g-3" id="containerMinuman">
                             @foreach ($menus as $menu)
-                                {{-- Cek apakah kategori mengandung kata 'minum' atau TIDAK mengandung kata makan (opsional) --}}
+                                {{-- LOGIKA: Tampilkan di tab Minuman jika kategori mengandung kata 'minum' --}}
                                 @if(stripos($menu->kategori->nama ?? '', 'minum') !== false)
                                     <div class="col menu-item-col" data-name="{{ strtolower($menu->nama) }}">
                                         <div class="card card-menu h-100" onclick="addToCart({{ $menu->id }}, '{{ $menu->nama }}', {{ $menu->harga }})">
@@ -210,6 +210,23 @@
 
         </div>
     </main>
+</div>
+
+<div class="modal fade" id="waModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">Struk WhatsApp</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <p class="mb-3">Klik tombol untuk mengirim struk via WhatsApp.</p>
+                <a id="waButton" href="#" target="_blank" class="btn btn-success w-100 fw-bold py-2">
+                    <i class="bi bi-whatsapp"></i> Kirim Struk via WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static">
@@ -263,6 +280,7 @@
 <script>
     let cart = [];
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    const waModal = new bootstrap.Modal(document.getElementById('waModal'));
     const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 
     function addToCart(id, nama, harga) {
@@ -353,7 +371,7 @@
 
     document.getElementById('jumlahBayar').addEventListener('input', function() {
         const total = cart.reduce((acc, item) => acc + (item.harga * item.qty), 0);
-        const bayar = Number(this.value.replace(/\D/g, '')); // Hapus karakter non-angka
+        const bayar = Number(this.value.replace(/\D/g, '')); 
         const kembalianEl = document.getElementById('kembalianDisplay');
 
         if(bayar >= total) {
@@ -397,11 +415,19 @@
         .then(res => {
             btn.innerHTML = 'Proses Transaksi';
             btn.disabled = false;
+            
             if(res.success) {
-                alert('Transaksi Berhasil!');
                 cart = [];
                 renderCart();
                 paymentModal.hide();
+
+                // Cek apakah ada link WhatsApp
+                if(res.wa_link) {
+                    document.getElementById('waButton').href = res.wa_link;
+                    waModal.show();
+                } else {
+                    alert('Transaksi Berhasil!');
+                }
             } else {
                 alert('Gagal: ' + res.message);
             }

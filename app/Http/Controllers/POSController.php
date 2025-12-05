@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Models\Pesanan;
 use App\Http\Controllers\PesananController;
-use App\Http\Controllers\WhatsAppController;
+// use App\Http\Controllers\WhatsAppController; // <-- sudah tidak dipakai kalau pakai wa.me
 
 class POSController extends Controller
 {
@@ -20,49 +20,66 @@ class POSController extends Controller
     {
         try {
 
-            // Ambil JSON dari fetch()
+            // STEP 1: Ambil JSON dari fetch()
             $data = $request->json()->all();
 
-            // Gabungkan agar kompatibel
+            // STEP 2: Merge supaya $request->items, $request->nomor_wa, dll bisa diakses normal
             $request->merge($data);
 
-            // Simpan transaksi lewat PesananController
+            // STEP 3: Simpan transaksi lewat PesananController (punya kamu sendiri)
             $pesananController = app()->make(PesananController::class);
             $pesanan = $pesananController->store($request, true);
 
             /*
             |--------------------------------------------------------------------------
-            |  🔥 KIRIM WHATSAPP (SETELAH PESANAN TERSIMPAN)
+            |  STEP 4: Siapkan link wa.me untuk kirim struk
             |--------------------------------------------------------------------------
             */
+            $waLink = null;
 
+            // Hanya buat link kalau nomor WA diisi
             if (!empty($request->nomor_wa)) {
 
-                // Siapkan items untuk struk
-                $items = [];
-                foreach ($request->items as $item) {
-                    $items[] = [
-                        'name' => $item['nama'],
-                        'qty'  => $item['qty'],
-                        'subtotal' => $item['qty'] * $item['harga']
-                    ];
+                // 4a. Format nomor WA → 08xx jadi 62xx
+                $nomor = preg_replace('/[^0-9]/', '', $request->nomor_wa); // buang spasi/titik
+                if (substr($nomor, 0, 1) === "0") {
+                    $nomor = "62" . substr($nomor, 1);
                 }
 
-                // Hitung total
-                $total = array_sum(array_column($items, 'subtotal'));
+                // 4b. Format list barang
+                $itemsText = "";
+                $total = 0;
 
-                // Kirim WA pakai WhatsAppController
-                app(WhatsAppController::class)->sendReceipt(
-                    $request->nomor_wa,
-                    $items,
-                    $total,
-                    strtoupper($request->metode)
-                );
+                foreach ($request->items as $item) {
+                    $subtotal = $item['qty'] * $item['harga'];
+                    $total += $subtotal;
+                    $itemsText .= "- {$item['nama']} x{$item['qty']} = Rp " . number_format($subtotal, 0, ',', '.') . "\n";
+                }
+
+                // 4c. Pesan struk (plain text dulu)
+                $plainMessage =
+"📄 *Struk Belanja*
+Tanggal: " . date('d/m/Y H:i') . "
+
+*Barang:*
+{$itemsText}
+*Total:* Rp " . number_format($total, 0, ',', '.') . "
+*Pembayaran:* " . strtoupper($request->metode) . "
+
+Terima kasih 🙏";
+
+                // 4d. URL-encode pesan untuk dipakai di wa.me
+                $encodedMessage = urlencode($plainMessage);
+
+                // 4e. Buat link wa.me
+                $waLink = "https://wa.me/{$nomor}?text={$encodedMessage}";
             }
 
+            // STEP 5: kirim response ke frontend
             return response()->json([
-                'success' => true,
-                'message' => 'Transaksi berhasil & struk WhatsApp terkirim!',
+                'success'   => true,
+                'message'   => 'Transaksi berhasil disimpan',
+                'wa_link'   => $waLink,  // <-- ini nanti dipakai di JS
                 'struk_url' => null
             ]);
 
@@ -86,4 +103,5 @@ class POSController extends Controller
 
         return view('kasir.riwayat.index', compact('riwayat'));
     }
+
 }

@@ -101,14 +101,34 @@ class KeuanganController extends Controller
     {
         $q = Keuangan::where('jenis', 'pengeluaran');
 
-        if ($request->filled('sumber')) $q->where('sumber', $request->sumber);
-        if ($request->filled('from')) $q->whereDate('tanggal', '>=', $request->from);
-        if ($request->filled('to')) $q->whereDate('tanggal', '<=', $request->to);
+        // Filter Tanggal
+        if ($request->filled('from')) {
+            $q->whereDate('tanggal', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $q->whereDate('tanggal', '<=', $request->to);
+        }
 
-        $pengeluaran = $q->orderBy('tanggal','desc')->paginate(20);
-        $totalPengeluaran = $q->sum('nominal');
+        // Hitung Statistik
+        $totalPengeluaran = (clone $q)->sum('nominal'); // Total sesuai filter yang dipilih
 
-        return view('admin.keuangan.pengeluaran', compact('pengeluaran','totalPengeluaran'));
+        $pengeluaranHariIni = Keuangan::where('jenis', 'pengeluaran')
+            ->whereDate('tanggal', now())
+            ->sum('nominal');
+
+        $pengeluaranMingguIni = Keuangan::where('jenis', 'pengeluaran')
+            ->whereBetween('tanggal', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('nominal');
+
+        // Ambil Data Tabel
+        $pengeluaran = $q->orderBy('tanggal', 'desc')->paginate(15);
+
+        return view('admin.keuangan.pengeluaran', compact(
+            'pengeluaran', 
+            'totalPengeluaran', 
+            'pengeluaranHariIni', 
+            'pengeluaranMingguIni'
+        ));
     }
 
     // LAPORAN KEUANGAN

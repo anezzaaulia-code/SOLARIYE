@@ -14,11 +14,25 @@ class MenuController extends Controller
         $this->middleware(['admin']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $menus = Menu::with('kategori')->orderBy('nama')->paginate(20);
+        $q = $request->q;
+
+        $menus = Menu::when($q, function($query) use ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('nama', 'like', "%$q%")
+                    ->orWhere('deskripsi', 'like', "%$q%")
+                    ->orWhereHas('kategori', function($cat) use ($q) {
+                        $cat->where('nama', 'like', "%$q%");
+                    });
+            });
+        })
+        ->orderBy('id', 'desc')
+        ->paginate(10);
+
         return view('admin.menu.index', compact('menus'));
     }
+
 
     public function create()
     {
@@ -81,4 +95,9 @@ class MenuController extends Controller
         $menu->delete();
         return back()->with('success','Menu dihapus.');
     }
+    public function getImageAttribute()
+    {
+        return $this->foto; // atau gabungkan jika nanti punya 2 field
+    }
+
 }

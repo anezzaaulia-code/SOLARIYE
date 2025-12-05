@@ -3,18 +3,21 @@
 @section('content')
 <div class="container-fluid p-4">
 
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold text-dark m-0">Laporan Pendapatan</h4>
             <p class="text-muted small m-0">Pantau arus kas masuk harian dan bulanan Anda.</p>
         </div>
         <div>
-            <button class="btn btn-outline-success btn-sm" onclick="window.print()">
-                <i class="bi bi-printer me-2"></i>Cetak Laporan
-            </button>
+            {{-- 🔥 FIX: route sudah benar untuk export pendapatan --}}
+            <a href="{{ route('pendapatan.export', request()->all()) }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Cetak Laporan
+            </a>
         </div>
     </div>
 
+    {{-- FILTER --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3 align-items-end">
@@ -30,6 +33,7 @@
                     <button type="submit" class="btn btn-primary w-100 fw-bold">
                         <i class="bi bi-funnel me-1"></i> Terapkan Filter
                     </button>
+
                     @if(request('from') || request('to'))
                         <a href="{{ url()->current() }}" class="btn btn-secondary" title="Reset Filter">
                             <i class="bi bi-arrow-counterclockwise"></i>
@@ -40,6 +44,7 @@
         </div>
     </div>
 
+    {{-- STATISTIK --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
@@ -50,7 +55,9 @@
                             <i class="bi bi-calendar-check"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-0">Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-dark mb-0">
+                        Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -64,7 +71,9 @@
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-0">Rp {{ number_format($pendapatanMinggu, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-dark mb-0">
+                        Rp {{ number_format($pendapatanMinggu, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -78,35 +87,46 @@
                             <i class="bi bi-wallet2"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-dark mb-0">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-dark mb-0">
+                        Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- TABEL --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 border-bottom">
-            <h6 class="m-0 fw-bold text-primary"><i class="bi bi-table me-2"></i>Rincian Transaksi Masuk</h6>
+            <h6 class="m-0 fw-bold text-primary">
+                <i class="bi bi-table me-2"></i>Rincian Transaksi Masuk
+            </h6>
         </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary small text-uppercase">
                         <tr>
                             <th class="px-4 py-3 text-center" width="5%">No</th>
-                            <th class="py-3" width="15%">Tanggal</th>
-                            <th class="py-3" width="15%">Sumber</th>
-                            <th class="py-3" width="45%">Pelanggan / Keterangan</th>
-                            <th class="py-3 px-4 text-end" width="20%">Nominal (Rp)</th>
+                            <th width="15%">Tanggal</th>
+                            <th width="15%">Sumber</th>
+                            <th width="45%">Pelanggan / Keterangan</th>
+                            <th class="px-4 text-end" width="20%">Nominal (Rp)</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @forelse ($data as $row)
                         <tr>
-                            <td class="text-center text-muted">{{ $loop->iteration + $data->firstItem() - 1 }}</td>
+                            <td class="text-center text-muted">
+                                {{ $loop->iteration + $data->firstItem() - 1 }}
+                            </td>
 
                             <td>
-                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($row->tanggal)->format('d M Y') }}</span>
+                                <span class="fw-bold text-dark">
+                                    {{ \Carbon\Carbon::parse($row->tanggal)->format('d M Y') }}
+                                </span>
                             </td>
 
                             <td>
@@ -136,6 +156,7 @@
                                 </span>
                             </td>
                         </tr>
+
                         @empty
                         <tr>
                             <td colspan="5" class="text-center py-5 text-muted">
@@ -148,12 +169,15 @@
 
                     <tfoot class="bg-light fw-bold">
                         <tr>
-                            <td colspan="4" class="text-end py-3 text-secondary text-uppercase small">Total Halaman Ini</td>
+                            <td colspan="4" class="text-end py-3 text-secondary text-uppercase small">
+                                Total Halaman Ini
+                            </td>
                             <td class="text-end px-4 py-3 text-primary fs-6">
                                 Rp {{ number_format($data->sum('nominal'), 0, ',', '.') }}
                             </td>
                         </tr>
                     </tfoot>
+
                 </table>
             </div>
         </div>

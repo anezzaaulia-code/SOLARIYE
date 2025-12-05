@@ -136,7 +136,9 @@
     <nav id="sidebar">
         
         <div class="sidebar-header">
-            <i class="bi bi-speedometer2 fs-4 text-primary"></i>
+            <img src="{{ asset('storage/login/logo.jpg') }}" 
+                alt="Logo"
+                style="width: 40px; height: 40px; object-fit: contain;">
             <span class="app-name">SOLARIYE</span>
         </div>
 

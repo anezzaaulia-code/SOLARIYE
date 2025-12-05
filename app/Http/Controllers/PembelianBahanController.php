@@ -17,7 +17,9 @@ class PembelianBahanController extends Controller
         $this->middleware('auth');
     }
 
+    // ==============================
     // INDEX
+    // ==============================
     public function index()
     {
         $pembelian = PembelianBahan::with('supplier')
@@ -27,40 +29,82 @@ class PembelianBahanController extends Controller
         return view('admin.pembelian.index', compact('pembelian'));
     }
 
+    // ==============================
     // FORM CREATE
+    // ==============================
     public function create()
     {
-        $suppliers = Supplier::all();
-        $bahan = BahanBaku::all();
-        return view('admin.pembelian.create', compact('suppliers', 'bahan'));
+        return view('admin.pembelian.create', [
+            'suppliers' => Supplier::all(),
+            'bahan'     => BahanBaku::all(),
+        ]);
     }
 
-    // STORE
+    // ==============================
+    // STORE PEMBELIAN
+    // ==============================
     public function store(Request $request)
     {
+        // VALIDASI DASAR
         $request->validate([
-            'tanggal'       => 'required|date',
-            'supplier_id'   => 'nullable|exists:suppliers,id',
-            'bahan_id'      => 'required|array',
-            'qty'           => 'required|array',
-            'harga_satuan'  => 'required|array',
+            'tanggal'        => 'required|date',
+            'supplier_id'    => 'required_without:supplier_baru|nullable|exists:suppliers,id',
+            'supplier_baru'  => 'required_without:supplier_id|nullable|string|max:100',
+
+            'bahan_id'       => 'required|array',
+            'qty'            => 'required|array',
+            'harga_satuan'   => 'required|array',
+            'satuan'         => 'required|array',
+            'bahan_baru'     => 'nullable|array',
+        ], [
+            'supplier_id.required_without'   => 'Pilih supplier atau isi supplier baru.',
+            'supplier_baru.required_without' => 'Isi supplier baru jika tidak memilih supplier.',
         ]);
 
+        // ==============================
+        // VALIDASI SUPPLIER DUPLIKAT
+        // ==============================
+        if (!empty($request->supplier_baru)) {
+            $cekSupplier = Supplier::where('nama_supplier', 'LIKE', $request->supplier_baru)->first();
+            if ($cekSupplier) {
+                return back()->withInput()->with(
+                    'error',
+                    "Supplier '{$request->supplier_baru}' sudah terdaftar! Silakan pilih dari dropdown."
+                );
+            }
+        }
+
+        // ==============================
+        // VALIDASI BAHAN BARU DUPLIKAT
+        // ==============================
+        foreach ($request->bahan_baru as $i => $namaBaru) {
+            if (!empty($namaBaru)) {
+                $cek = BahanBaku::where('nama_bahan', 'LIKE', $namaBaru)->first();
+                if ($cek) {
+                    return back()->withInput()->with(
+                        'error',
+                        "Bahan '{$namaBaru}' sudah terdaftar (baris ke-" . ($i + 1) . "). Gunakan dropdown."
+                    );
+                }
+            }
+        }
+
+        // ==============================
+        // SIMPAN PEMBELIAN
+        // ==============================
         DB::beginTransaction();
-
         try {
-
-            // Jika supplier baru ditambahkan manual
-            if ($request->supplier_baru) {
+            // SIMPAN SUPPLIER
+            if (!empty($request->supplier_baru)) {
                 $supplier = Supplier::create([
-                    'nama_supplier' => $request->supplier_baru
+                    'nama_supplier' => $request->supplier_baru,
                 ]);
                 $supplierId = $supplier->id;
             } else {
                 $supplierId = $request->supplier_id;
             }
 
-            // Buat header pembelian
+            // HEADER PEMBELIAN
             $pembelian = PembelianBahan::create([
                 'tanggal'     => $request->tanggal,
                 'supplier_id' => $supplierId,
@@ -68,69 +112,78 @@ class PembelianBahanController extends Controller
                 'created_by'  => auth()->id(),
             ]);
 
-            $total = 0;
+            $grandTotal = 0;
 
-            foreach ($request->bahan_id as $i => $bahanId) {
+            // ==============================
+            // SIMPAN DETAIL PEMBELIAN
+            // ==============================
+            foreach ($request->bahan_id as $i => $dropdownId) {
+                $qty    = (int)$request->qty[$i];
+                $harga  = (int)$request->harga_satuan[$i];
+                $satuan = $request->satuan[$i] ?? 'pcs';
+                $baru   = $request->bahan_baru[$i] ?? null;
 
-                $qty   = $request->qty[$i] ?? 0;
-                $harga = $request->harga_satuan[$i] ?? 0;
+                if ($qty <= 0 || $harga < 0) continue;
 
-                if ($qty <= 0 || $harga <= 0) {
-                    continue;
+                // Tentukan bahan yang digunakan
+                if (!empty($dropdownId)) {
+                    $finalBahanId = $dropdownId;
+                } elseif (!empty($baru)) {
+                    $bahan = BahanBaku::create([
+                        'nama_bahan' => $baru,
+                        'satuan'     => $satuan,
+                        'stok'       => 0,
+                    ]);
+                    $finalBahanId = $bahan->id;
+                } else {
+                    throw new \Exception("Baris ke-" . ($i + 1) . ": Harap pilih bahan atau isi bahan baru.");
                 }
 
-                // CARI BAHAN
-                $bahan = BahanBaku::find($bahanId);
-
-                if (!$bahan) {
-                    throw new \Exception("Bahan dengan ID $bahanId tidak ditemukan.");
-                }
-
-                // Simpan detail pembelian
                 $subtotal = $qty * $harga;
+                $grandTotal += $subtotal;
 
                 DetailPembelianBahan::create([
                     'pembelian_bahan_id' => $pembelian->id,
-                    'bahan_id'           => $bahan->id,
+                    'bahan_id'           => $finalBahanId,
                     'qty'                => $qty,
                     'harga_satuan'       => $harga,
                     'subtotal'           => $subtotal,
                 ]);
 
-                // UPDATE STOK BAHAN (TIDAK MEMBUAT BAHAN BARU)
+                // UPDATE STOK
+                $bahan = BahanBaku::find($finalBahanId);
                 $bahan->stok += $qty;
                 $bahan->save();
-
-                $total += $subtotal;
             }
 
-            // Update total pembelian
-            $pembelian->update(['total_harga' => $total]);
+            // UPDATE TOTAL
+            $pembelian->update(['total_harga' => $grandTotal]);
 
-            // Simpan keuangan
+            // CATAT KEUANGAN
             Keuangan::create([
                 'tanggal'    => $request->tanggal,
                 'jenis'      => 'pengeluaran',
-                'sumber'     => 'suppliers',
-                'nominal'    => $total,
-                'keterangan' => 'Pembelian dari ' . ($pembelian->supplier->nama_supplier ?? 'Supplier'),
+                'sumber'     => 'pembelian_bahan',
+                'nominal'    => $grandTotal,
+                'keterangan' => 'Pembelian bahan baku dari ' . $pembelian->supplier->nama_supplier,
                 'ref_id'     => $pembelian->id,
-                'ref_table'  => 'pembelian',
+                'ref_table'  => 'pembelian_bahan',
                 'created_by' => auth()->id(),
             ]);
 
             DB::commit();
 
-            return redirect()->route('pembelian.index')
-                ->with('success', 'Pembelian berhasil disimpan.');
+            return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil disimpan.');
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menyimpan pembelian: ' . $e->getMessage());
+            return back()->withInput()->with('error', "Terjadi kesalahan: " . $e->getMessage());
         }
     }
 
+    // ==============================
     // SHOW
+    // ==============================
     public function show($id)
     {
         $pembelian = PembelianBahan::with(['supplier', 'detailPembelian.bahan'])
@@ -139,19 +192,25 @@ class PembelianBahanController extends Controller
         return view('admin.pembelian.show', compact('pembelian'));
     }
 
+    // ==============================
     // EDIT
-    public function edit(PembelianBahan $pembelian)
+    // ==============================
+    public function edit($id)
     {
-        $suppliers = Supplier::all();
-        $bahan = BahanBaku::all();
-        $detail = $pembelian->detailPembelian;
-
-        return view('admin.pembelian.edit', compact('pembelian', 'suppliers', 'bahan', 'detail'));
+        return view('admin.pembelian.edit', [
+            'pembelian' => PembelianBahan::with('detailPembelian')->findOrFail($id),
+            'suppliers' => Supplier::all(),
+            'bahan'     => BahanBaku::all(),
+        ]);
     }
 
-    // UPDATE
-    public function update(Request $request, PembelianBahan $pembelian)
+    // ==============================
+    // UPDATE PEMBELIAN
+    // ==============================
+    public function update(Request $request, $id)
     {
+        $pembelian = PembelianBahan::findOrFail($id);
+
         $request->validate([
             'tanggal'      => 'required|date',
             'supplier_id'  => 'required|exists:suppliers,id',
@@ -161,35 +220,36 @@ class PembelianBahanController extends Controller
         ]);
 
         DB::beginTransaction();
-
         try {
-            // Balikkan stok lama
+            // ROLLBACK STOK LAMA
             foreach ($pembelian->detailPembelian as $detail) {
                 $bahan = BahanBaku::find($detail->bahan_id);
-                $bahan->stok -= $detail->qty;
-                $bahan->save();
+                if ($bahan) {
+                    $bahan->stok -= $detail->qty;
+                    $bahan->save();
+                }
             }
 
-            // Hapus detail
+            // HAPUS DETAIL LAMA
             $pembelian->detailPembelian()->delete();
 
-            // Update header
+            // UPDATE HEADER
             $pembelian->update([
                 'tanggal'     => $request->tanggal,
                 'supplier_id' => $request->supplier_id,
             ]);
 
-            $total = 0;
+            $grandTotal = 0;
 
-            // Insert detail baru
+            // SIMPAN DETAIL BARU
             foreach ($request->bahan_id as $i => $bahanId) {
+                $qty   = $request->qty[$i] ?? 0;
+                $harga = $request->harga_satuan[$i] ?? 0;
 
-                $qty   = $request->qty[$i] ?? null;
-                $harga = $request->harga_satuan[$i] ?? null;
-
-                if (!$bahanId || !$qty || !$harga) continue;
+                if ($qty <= 0) continue;
 
                 $subtotal = $qty * $harga;
+                $grandTotal += $subtotal;
 
                 DetailPembelianBahan::create([
                     'pembelian_bahan_id' => $pembelian->id,
@@ -199,64 +259,65 @@ class PembelianBahanController extends Controller
                     'subtotal'           => $subtotal,
                 ]);
 
-                // Update stok
                 $bahan = BahanBaku::find($bahanId);
                 $bahan->stok += $qty;
                 $bahan->save();
-
-                $total += $subtotal;
             }
 
-            // Update total pembelian
-            $pembelian->update(['total_harga' => $total]);
+            // UPDATE TOTAL
+            $pembelian->update(['total_harga' => $grandTotal]);
 
-            // Update catatan keuangan
-            $keu = Keuangan::where('ref_id', $pembelian->id)
-                ->where('ref_table', 'pembelian')
-                ->first();
-
-            if ($keu) {
+            // UPDATE KEUANGAN
+            if ($keu = Keuangan::where('ref_id', $id)->where('ref_table', 'pembelian_bahan')->first()) {
                 $keu->update([
-                    'tanggal'    => $request->tanggal,
-                    'nominal'    => $total,
-                    'keterangan' => 'Update pembelian dari ' . ($pembelian->supplier->nama_supplier ?? 'Supplier'),
+                    'tanggal' => $request->tanggal,
+                    'nominal' => $grandTotal,
                 ]);
             }
 
             DB::commit();
 
-            return redirect()->route('pembelian.index')
-                ->with('success', 'Pembelian berhasil diperbarui.');
+            return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil diperbarui.');
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal memperbarui pembelian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
-    // DELETE
-    public function destroy(PembelianBahan $pembelian)
+    // ==============================
+    // DELETE PEMBELIAN
+    // ==============================
+    public function destroy($id)
     {
-        DB::transaction(function () use ($pembelian) {
+        $pembelian = PembelianBahan::findOrFail($id);
 
-            // Hapus catatan keuangan
-            Keuangan::where('ref_id', $pembelian->id)
-                ->where('ref_table', 'pembelian')
-                ->delete();
-
-            // Balikkan stok
+        DB::beginTransaction();
+        try {
+            // ROLLBACK STOK
             foreach ($pembelian->detailPembelian as $detail) {
                 $bahan = BahanBaku::find($detail->bahan_id);
-                $bahan->stok -= $detail->qty;
-                $bahan->save();
+                if ($bahan) {
+                    $bahan->stok -= $detail->qty;
+                    $bahan->save();
+                }
             }
 
-            // Hapus detail & header
+            // HAPUS DATA KEUANGAN
+            Keuangan::where('ref_id', $id)->where('ref_table', 'pembelian_bahan')->delete();
+
+            // HAPUS DETAIL & HEADER
             $pembelian->detailPembelian()->delete();
             $pembelian->delete();
-        });
 
-        return redirect()->route('pembelian.index')
-            ->with('success', 'Pembelian berhasil dihapus.');
+            DB::commit();
+
+            return redirect()->route('pembelian.index')->with('success', 'Pembelian berhasil dihapus.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Gagal hapus: ' . $e->getMessage());
+        }
     }
 }

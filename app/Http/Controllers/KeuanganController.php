@@ -218,4 +218,34 @@ class KeuanganController extends Controller
 
         return $pdf->download('Laporan-Pengeluaran.pdf');
     }
+    public function exportLaporanKeuangan(Request $request)
+    {
+        $from = $request->from ?? now()->startOfMonth()->toDateString();
+        $to   = $request->to   ?? now()->endOfMonth()->toDateString();
+
+        $pendapatan  = Keuangan::where('jenis','pemasukan')
+                        ->whereBetween('tanggal',[$from,$to])
+                        ->sum('nominal');
+
+        $pengeluaran = Keuangan::where('jenis','pengeluaran')
+                        ->whereBetween('tanggal',[$from,$to])
+                        ->sum('nominal');
+
+        $list = Keuangan::whereBetween('tanggal',[$from,$to])
+                ->orderBy('tanggal','asc')
+                ->get();
+
+        $saldo = $pendapatan - $pengeluaran;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.keuangan.pdf.laporan', [
+            'from'        => $from,
+            'to'          => $to,
+            'pendapatan'  => $pendapatan,
+            'pengeluaran' => $pengeluaran,
+            'saldo'       => $saldo,
+            'list'        => $list,
+        ])->setPaper('A4','portrait');
+
+        return $pdf->download('Laporan-Laba-Rugi.pdf');
+    }
 }

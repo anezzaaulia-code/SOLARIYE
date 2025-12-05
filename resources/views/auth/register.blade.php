@@ -77,7 +77,7 @@
         <div class="register-card">
 
             <div class="text-center mb-4">
-                <img src="/storage/login/logo.png" width="70">
+                <img src="/storage/login/logo.jpg" width="70">
             </div>
 
             <h3 class="text-center mb-2">Create Your Account</h3>

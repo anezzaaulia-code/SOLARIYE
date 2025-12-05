@@ -139,8 +139,8 @@
                                 @if(stripos($menu->kategori->nama ?? '', 'makan') !== false)
                                     <div class="col menu-item-col" data-name="{{ strtolower($menu->nama) }}">
                                         <div class="card card-menu h-100" onclick="addToCart({{ $menu->id }}, '{{ $menu->nama }}', {{ $menu->harga }})">
-                                            @if($menu->gambar)
-                                                <img src="{{ asset('storage/'.$menu->gambar) }}" class="card-img-top" alt="{{ $menu->nama }}">
+                                            @if($menu->foto)
+                                                <img src="{{ asset('storage/'.$menu->foto) }}" class="card-img-top" alt="{{ $menu->nama }}">
                                             @else
                                                 <div class="bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center text-muted" style="height: 130px;">
                                                     <small>No Image</small>

@@ -3,24 +3,28 @@
 @section('content')
 <div class="container-fluid p-4">
 
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold text-dark m-0">Laporan Laba Rugi</h4>
             <p class="text-muted small m-0">Ringkasan keuangan bulanan & laba bersih.</p>
         </div>
         <div>
-            <button class="btn btn-outline-danger btn-sm" onclick="window.print()">
+            {{-- 🔥 FIX: ganti route cetak ke route khusus laporan laba rugi --}}
+            <a href="{{ route('keuangan.laporan.export', request()->all()) }}" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-file-earmark-pdf me-2"></i>Cetak Laporan
-            </button>
+            </a>
         </div>
     </div>
 
+    {{-- FILTER --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-muted small fw-bold">Pilih Bulan</label>
-                    <input type="month" name="bulan" class="form-control" value="{{ request('bulan', date('Y-m')) }}">
+                    <input type="month" name="bulan" class="form-control"
+                           value="{{ request('bulan', date('Y-m')) }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted small fw-bold">Dari Tanggal</label>
@@ -44,6 +48,7 @@
         </div>
     </div>
 
+    {{-- KARTU RINGKASAN --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
@@ -54,7 +59,9 @@
                             <i class="bi bi-graph-up-arrow"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-success mb-0">Rp {{ number_format($pendapatan, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-success mb-0">
+                        Rp {{ number_format($pendapatan, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -68,13 +75,15 @@
                             <i class="bi bi-graph-down-arrow"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold text-danger mb-0">Rp {{ number_format($pengeluaran, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-danger mb-0">
+                        Rp {{ number_format($pengeluaran, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
 
+        @php $laba = $pendapatan - $pengeluaran; @endphp
         <div class="col-md-4">
-            @php $laba = $pendapatan - $pengeluaran; @endphp
             <div class="card border-0 shadow-sm h-100 border-start border-4 {{ $laba >= 0 ? 'border-primary' : 'border-warning' }}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -91,43 +100,60 @@
         </div>
     </div>
 
+    {{-- TABEL TRANSAKSI --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 border-bottom">
-            <h6 class="m-0 fw-bold text-dark"><i class="bi bi-list-ul me-2"></i>Rincian Transaksi Keuangan</h6>
+            <h6 class="m-0 fw-bold text-dark">
+                <i class="bi bi-list-ul me-2"></i>Rincian Transaksi Keuangan
+            </h6>
         </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary small text-uppercase">
                         <tr>
                             <th class="px-4 py-3 text-center" width="5%">No</th>
-                            <th class="py-3" width="15%">Tanggal</th>
-                            <th class="py-3 text-center" width="10%">Jenis</th>
-                            <th class="py-3" width="45%">Keterangan</th>
-                            <th class="py-3 px-4 text-end" width="20%">Nominal</th>
+                            <th width="15%">Tanggal</th>
+                            <th class="text-center" width="10%">Jenis</th>
+                            <th width="45%">Keterangan</th>
+                            <th class="px-4 text-end" width="20%">Nominal</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($list as $item)
                         <tr>
                             <td class="text-center text-muted">{{ $loop->iteration }}</td>
+
                             <td>
-                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</span>
+                                <span class="fw-bold text-dark">
+                                    {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
+                                </span>
                             </td>
+
                             <td class="text-center">
                                 @if($item->jenis == 'pemasukan')
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3">Masuk</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3">
+                                        Masuk
+                                    </span>
                                 @else
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3">Keluar</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3">
+                                        Keluar
+                                    </span>
                                 @endif
                             </td>
+
                             <td>
                                 <span class="text-dark">{{ $item->keterangan ?? '-' }}</span>
-                                <div class="small text-muted fst-italic">Sumber: {{ ucfirst($item->sumber) }}</div>
+                                <div class="small text-muted fst-italic">
+                                    Sumber: {{ ucfirst($item->sumber) }}
+                                </div>
                             </td>
+
                             <td class="text-end px-4">
                                 <span class="fw-bold {{ $item->jenis == 'pemasukan' ? 'text-success' : 'text-danger' }}">
-                                    {{ $item->jenis == 'pemasukan' ? '+' : '-' }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                    {{ $item->jenis == 'pemasukan' ? '+' : '-' }}
+                                    Rp {{ number_format($item->nominal, 0, ',', '.') }}
                                 </span>
                             </td>
                         </tr>
@@ -143,6 +169,7 @@
                 </table>
             </div>
         </div>
+
     </div>
 
 </div>
